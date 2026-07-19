@@ -91,6 +91,8 @@ class Profile(models.Model):
         blank=True,
     )
     review_note = models.TextField("nota de revisão", blank=True)
+    published_snapshot = models.JSONField("versão pública", default=dict, blank=True)
+    published_at = models.DateTimeField("versão pública em", null=True, blank=True)
     specializations = models.ManyToManyField(
         Specialization,
         verbose_name="especializações",
@@ -149,6 +151,104 @@ class Profile(models.Model):
     @property
     def can_submit(self):
         return not self.missing_required_sections()
+
+    def build_public_snapshot(self):
+        return {
+            "public_name": self.public_name,
+            "professional_title": self.professional_title,
+            "bio": self.bio,
+            "location": self.location,
+            "country": self.country,
+            "availability": self.availability,
+            "availability_label": self.get_availability_display(),
+            "work_preference": self.work_preference,
+            "work_preference_label": self.get_work_preference_display(),
+            "skills": list(self.skills.values_list("name", flat=True)),
+            "specializations": list(self.specializations.values_list("name", flat=True)),
+            "experiences": [
+                {
+                    "title": item.title,
+                    "organization": item.organization,
+                    "description": item.description,
+                    "start_date": item.start_date.isoformat(),
+                    "end_date": item.end_date.isoformat() if item.end_date else "",
+                }
+                for item in self.experiences.all()
+            ],
+            "education": [
+                {
+                    "qualification": item.qualification,
+                    "institution": item.institution,
+                    "field_of_study": item.field_of_study,
+                }
+                for item in self.education_entries.all()
+            ],
+            "certifications": [
+                {"name": item.name, "issuer": item.issuer}
+                for item in self.certifications.all()
+            ],
+            "languages": [
+                {"name": item.name, "level": item.get_level_display()}
+                for item in self.languages.all()
+            ],
+        }
+
+    @property
+    def public_payload(self):
+        return self.published_snapshot or self.build_public_snapshot()
+
+    @property
+    def public_display_name(self):
+        return self.public_payload.get("public_name", self.public_name)
+
+    @property
+    def public_professional_title(self):
+        return self.public_payload.get("professional_title", self.professional_title)
+
+    @property
+    def public_location(self):
+        return self.public_payload.get("location", self.location)
+
+    @property
+    def public_country(self):
+        return self.public_payload.get("country", self.country)
+
+    @property
+    def public_skill_names(self):
+        return self.public_payload.get("skills", [])
+
+
+class ProfileRevision(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pendente"
+        APPROVED = "approved", "Aprovada"
+        REJECTED = "rejected", "Rejeitada"
+        CANCELLED = "cancelled", "Cancelada"
+
+    profile = models.ForeignKey(Profile, related_name="revisions", on_delete=models.CASCADE)
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="submitted_profile_revisions", on_delete=models.CASCADE
+    )
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True)
+    review_note = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="reviewed_profile_revisions",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-submitted_at", "-id")
+        verbose_name = "revisão de perfil"
+        verbose_name_plural = "revisões de perfil"
+
+    def __str__(self):
+        return f"Revisão de {self.profile} em {self.submitted_at:%d/%m/%Y}"
 
 
 class Experience(models.Model):

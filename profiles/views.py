@@ -11,7 +11,7 @@ from .forms import (
     ProfileForm,
     ProfileLanguageForm,
 )
-from .models import Certification, Education, Experience, Profile, ProfileLanguage
+from .models import Certification, Education, Experience, Profile, ProfileLanguage, ProfileRevision
 
 
 SECTION_CONFIG = {
@@ -24,21 +24,40 @@ SECTION_CONFIG = {
 
 def mark_approved_profile_for_review(profile):
     if profile.status == Profile.Status.APPROVED:
+        if not profile.published_snapshot:
+            profile.published_snapshot = profile.build_public_snapshot()
+            profile.published_at = profile.approved_at or timezone.now()
         profile.status = Profile.Status.CHANGES_PENDING
-        profile.is_public = False
+        profile.is_public = True
+
+
+def record_pending_revision(profile):
+    ProfileRevision.objects.update_or_create(
+        profile=profile,
+        status=ProfileRevision.Status.PENDING,
+        defaults={"submitted_by": profile.user, "payload": profile.build_public_snapshot()},
+    )
 
 
 @login_required
 def edit_profile(request):
     profile = request.user.profile
+    was_approved = profile.status == Profile.Status.APPROVED
+    previous_snapshot = profile.build_public_snapshot() if was_approved else None
     form = ProfileForm(request.POST or None, request.FILES or None, instance=profile)
     if request.method == "POST" and form.is_valid():
         updated = form.save(commit=False)
-        mark_approved_profile_for_review(updated)
+        if was_approved:
+            updated.published_snapshot = profile.published_snapshot or previous_snapshot
+            updated.published_at = profile.published_at or profile.approved_at or timezone.now()
+            updated.status = Profile.Status.CHANGES_PENDING
+            updated.is_public = True
         if "cv_file" in request.FILES:
             updated.cv_uploaded_at = timezone.now()
         updated.save()
         form.save_m2m()
+        if updated.status == Profile.Status.CHANGES_PENDING:
+            record_pending_revision(updated)
         messages.success(request, "Perfil guardado com sucesso.")
         return redirect("accounts:dashboard")
     return render(request, "profiles/edit.html", {"form": form, "profile": profile})
@@ -69,6 +88,7 @@ def submit_profile(request):
         profile.accepted_privacy_version = "1.0"
         profile.accepted_privacy_at = now
         profile.save()
+        record_pending_revision(profile)
         from interactions.models import Notification
 
         staff_ids = request.user.__class__.objects.filter(is_staff=True, is_active=True).values_list("id", flat=True)
@@ -102,9 +122,11 @@ def add_section(request, section):
     if request.method == "POST" and form.is_valid():
         entry = form.save(commit=False)
         entry.profile = request.user.profile
-        entry.save()
         mark_approved_profile_for_review(entry.profile)
         entry.profile.save()
+        entry.save()
+        if entry.profile.status == Profile.Status.CHANGES_PENDING:
+            record_pending_revision(entry.profile)
         messages.success(request, f"{title} adicionada com sucesso.")
         return redirect("accounts:dashboard")
     return render(request, "profiles/section_form.html", {"form": form, "title": title})
@@ -116,10 +138,12 @@ def edit_section(request, section, pk):
     entry = get_object_or_404(model, pk=pk, profile=request.user.profile)
     form = form_class(request.POST or None, instance=entry)
     if request.method == "POST" and form.is_valid():
-        form.save()
         profile = request.user.profile
         mark_approved_profile_for_review(profile)
         profile.save()
+        form.save()
+        if profile.status == Profile.Status.CHANGES_PENDING:
+            record_pending_revision(profile)
         messages.success(request, f"{title} actualizada com sucesso.")
         return redirect("accounts:dashboard")
     return render(
@@ -135,7 +159,7 @@ def preview_profile(request):
     return render(
         request,
         "profiles/public_detail.html",
-        {"profile": profile, "like_count": 0, "is_preview": True},
+        {"profile": profile, "display": profile.build_public_snapshot(), "like_count": 0, "is_preview": True},
     )
 
 
@@ -144,10 +168,12 @@ def delete_section(request, section, pk):
     model, _form_class, title = get_section_config(section)
     entry = get_object_or_404(model, pk=pk, profile=request.user.profile)
     if request.method == "POST":
-        entry.delete()
         profile = request.user.profile
         mark_approved_profile_for_review(profile)
         profile.save()
+        entry.delete()
+        if profile.status == Profile.Status.CHANGES_PENDING:
+            record_pending_revision(profile)
         messages.success(request, f"{title} eliminada.")
         return redirect("accounts:dashboard")
     return render(request, "profiles/section_confirm_delete.html", {"entry": entry, "title": title})

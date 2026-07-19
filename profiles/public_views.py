@@ -32,6 +32,7 @@ def public_profile(request, slug):
     )
     context = {
         "profile": profile,
+        "display": profile.public_payload,
         "like_count": profile.profilelike_set.count(),
         "is_favorite": False,
         "is_liked": False,

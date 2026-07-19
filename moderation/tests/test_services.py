@@ -28,7 +28,25 @@ class ModerationServiceTests(TestCase):
         self.assertTrue(self.profile.is_public)
         self.assertEqual(self.profile.reviewed_by, self.moderator)
         self.assertIsNotNone(self.profile.reviewed_at)
+        self.assertEqual(self.profile.published_snapshot["public_name"], self.profile.public_name)
         self.assertEqual(AuditLog.objects.get().action, "profile.approved")
+
+    def test_rejected_changes_keep_previous_public_version(self):
+        self.profile.public_name = "Versão aprovada"
+        self.profile.professional_title = "Título aprovado"
+        self.profile.status = Profile.Status.APPROVED
+        self.profile.is_public = True
+        self.profile.published_snapshot = self.profile.build_public_snapshot()
+        self.profile.status = Profile.Status.CHANGES_PENDING
+        self.profile.professional_title = "Título não aprovado"
+        self.profile.save()
+
+        moderate_profile(self.profile, self.moderator, "reject", "Alteração inadequada")
+
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.status, Profile.Status.APPROVED)
+        self.assertTrue(self.profile.is_public)
+        self.assertEqual(self.profile.public_payload["professional_title"], "Título aprovado")
 
     def test_rejection_requires_reason(self):
         with self.assertRaises(ValidationError):
@@ -67,4 +85,3 @@ class ModerationServiceTests(TestCase):
             event.save()
         with self.assertRaises(ValidationError):
             event.delete()
-

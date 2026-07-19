@@ -76,6 +76,20 @@ class PublicSearchTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_search_uses_approved_snapshot_during_pending_changes(self):
+        profile = self.public_profile
+        profile.published_snapshot = profile.build_public_snapshot()
+        approved_title = profile.professional_title
+        profile.professional_title = "Título ainda não aprovado"
+        profile.status = Profile.Status.CHANGES_PENDING
+        profile.save()
+
+        approved_response = self.client.get("/pesquisar/", {"q": approved_title})
+        pending_response = self.client.get("/pesquisar/", {"q": "ainda não aprovado"})
+
+        self.assertContains(approved_response, profile.public_display_name)
+        self.assertNotContains(pending_response, profile.public_display_name)
+
     def test_area_page_lists_only_public_professionals(self):
         response = self.client.get(f"/areas/{self.area.slug}/")
 

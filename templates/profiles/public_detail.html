@@ -1,26 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}{{ profile.public_name }}, {{ profile.professional_title }} | CVLink{% endblock %}
-{% block meta_description %}Conhece o perfil profissional de {{ profile.public_name }}, experiência, competências e formação.{% endblock %}
+{% block title %}{{ display.public_name }}, {{ display.professional_title }} | CVLink{% endblock %}
+{% block meta_description %}Conhece o perfil profissional de {{ display.public_name }}, experiência, competências e formação.{% endblock %}
 {% block robots %}{% if is_preview %}noindex,nofollow{% else %}index,follow{% endif %}{% endblock %}
 
 {% block content %}
 <section class="public-profile-page">
     <div class="container public-profile-grid">
         <main class="profile-main">
-            <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{% url 'search' %}">Profissionais</a><span>/</span><span>{{ profile.public_name }}</span></nav>
+            <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{% url 'search' %}">Profissionais</a><span>/</span><span>{{ display.public_name }}</span></nav>
             {% if is_preview %}<div class="preview-banner" role="status">Pré-visualização privada. Esta página não aparece na pesquisa.</div>{% endif %}
             <header class="profile-hero">
-                <div class="profile-avatar profile-avatar-large" aria-hidden="true">{{ profile.public_name|slice:":1"|upper }}</div>
-                <div><span class="status-approved">{% if is_preview %}Pré-visualização{% else %}Perfil aprovado{% endif %}</span><h1>{{ profile.public_name }}</h1><p class="profile-headline">{{ profile.professional_title }}</p><p>{{ profile.location }}, {{ profile.country }}</p></div>
+                <div class="profile-avatar profile-avatar-large" aria-hidden="true">{{ display.public_name|slice:":1"|upper }}</div>
+                <div><span class="status-approved">{% if is_preview %}Pré-visualização{% else %}Perfil aprovado{% endif %}</span><h1>{{ display.public_name }}</h1><p class="profile-headline">{{ display.professional_title }}</p><p>{{ display.location }}, {{ display.country }}</p></div>
             </header>
-            <section class="profile-content-card"><h2>Sobre</h2><p>{{ profile.bio|linebreaksbr }}</p></section>
-            <section class="profile-content-card"><h2>Competências</h2><div class="skill-tags">{% for skill in profile.skills.all %}<span>{{ skill.name }}</span>{% endfor %}</div></section>
-            <section class="profile-content-card"><h2>Experiência</h2>{% for entry in profile.experiences.all %}<article class="timeline-entry"><h3>{{ entry.title }}</h3><strong>{{ entry.organization }}</strong><p>{{ entry.description }}</p></article>{% empty %}<p>Sem experiência publicada.</p>{% endfor %}</section>
-            <section class="profile-content-card"><h2>Formação</h2>{% for entry in profile.education_entries.all %}<article class="timeline-entry"><h3>{{ entry.qualification }}</h3><strong>{{ entry.institution }}</strong><p>{{ entry.field_of_study }}</p></article>{% empty %}<p>Sem formação publicada.</p>{% endfor %}</section>
+            <section class="profile-content-card"><h2>Sobre</h2><p>{{ display.bio|linebreaksbr }}</p></section>
+            <section class="profile-content-card"><h2>Competências</h2><div class="skill-tags">{% for skill in display.skills %}<span>{{ skill }}</span>{% endfor %}</div></section>
+            <section class="profile-content-card"><h2>Experiência</h2>{% for entry in display.experiences %}<article class="timeline-entry"><h3>{{ entry.title }}</h3><strong>{{ entry.organization }}</strong><p>{{ entry.description }}</p></article>{% empty %}<p>Sem experiência publicada.</p>{% endfor %}</section>
+            <section class="profile-content-card"><h2>Formação</h2>{% for entry in display.education %}<article class="timeline-entry"><h3>{{ entry.qualification }}</h3><strong>{{ entry.institution }}</strong><p>{{ entry.field_of_study }}</p></article>{% empty %}<p>Sem formação publicada.</p>{% endfor %}</section>
+            {% if display.certifications %}<section class="profile-content-card"><h2>Certificações</h2>{% for entry in display.certifications %}<article class="timeline-entry"><h3>{{ entry.name }}</h3><strong>{{ entry.issuer }}</strong></article>{% endfor %}</section>{% endif %}
+            {% if display.languages %}<section class="profile-content-card"><h2>Idiomas</h2><div class="skill-tags">{% for entry in display.languages %}<span>{{ entry.name }} · {{ entry.level }}</span>{% endfor %}</div></section>{% endif %}
         </main>
         <aside class="profile-sidebar">
-            <h2>Disponibilidade</h2><p>{{ profile.get_availability_display }}</p><p>{{ profile.get_work_preference_display }}</p>
+            <h2>Disponibilidade</h2><p>{{ display.availability_label }}</p><p>{{ display.work_preference_label }}</p>
             <p><strong>{{ like_count }}</strong> gosto{{ like_count|pluralize }}</p>
             {% if request.user == profile.user %}
                 <a class="btn btn-brand w-100" href="{% url 'profiles:edit' %}">Editar o meu perfil</a>

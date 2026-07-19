@@ -16,7 +16,7 @@ from .models import ContactRequest, Favorite, Notification, ProfileLike, Report
 def ensure_external_profile_action(user, profile):
     if profile.user_id == user.id:
         raise PermissionDenied("Não podes executar esta ação no teu próprio perfil.")
-    if profile.status != Profile.Status.APPROVED or not profile.is_public:
+    if profile.status not in {Profile.Status.APPROVED, Profile.Status.CHANGES_PENDING} or not profile.is_public:
         raise PermissionDenied("Este perfil não está disponível.")
 
 

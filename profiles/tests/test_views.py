@@ -39,6 +39,10 @@ class ProfileViewTests(TestCase):
 
     def test_editing_approved_profile_requires_new_review(self):
         profile = self.user.profile
+        profile.public_name = "Maria Sambu"
+        profile.professional_title = "Programadora"
+        profile.bio = "Perfil aprovado antes da alteração."
+        profile.location = "Bissau"
         profile.status = Profile.Status.APPROVED
         profile.is_public = True
         profile.save()
@@ -60,7 +64,11 @@ class ProfileViewTests(TestCase):
 
         profile.refresh_from_db()
         self.assertEqual(profile.status, Profile.Status.CHANGES_PENDING)
-        self.assertFalse(profile.is_public)
+        self.assertTrue(profile.is_public)
+        self.assertEqual(profile.revisions.filter(status="pending").count(), 1)
+        public_response = self.client.get(f"/profissionais/{profile.slug}/")
+        self.assertContains(public_response, "Programadora")
+        self.assertNotContains(public_response, "Programadora sénior")
 
     def test_incomplete_profile_cannot_be_submitted(self):
         self.client.force_login(self.user)

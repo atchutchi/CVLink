@@ -6,19 +6,32 @@ from .models import Profile
 def public_profiles(params=None):
     params = params or {}
     queryset = (
-        Profile.objects.filter(status=Profile.Status.APPROVED, is_public=True)
+        Profile.objects.filter(
+            Q(status=Profile.Status.APPROVED) | Q(status=Profile.Status.CHANGES_PENDING),
+            is_public=True,
+        )
         .select_related("user")
         .prefetch_related("specializations__area__sector", "skills")
     )
     query = str(params.get("q", "")).strip()
     if query:
-        queryset = queryset.filter(
+        current_fields = (
             Q(public_name__icontains=query)
             | Q(professional_title__icontains=query)
             | Q(bio__icontains=query)
             | Q(location__icontains=query)
             | Q(specializations__name__icontains=query)
             | Q(skills__name__icontains=query)
+        )
+        published_fields = (
+            Q(published_snapshot__public_name__icontains=query)
+            | Q(published_snapshot__professional_title__icontains=query)
+            | Q(published_snapshot__bio__icontains=query)
+            | Q(published_snapshot__location__icontains=query)
+        )
+        queryset = queryset.filter(
+            (Q(published_snapshot={}) & current_fields)
+            | (~Q(published_snapshot={}) & published_fields)
         )
     filters = {
         "sector": "specializations__area__sector__slug",
@@ -31,10 +44,19 @@ def public_profiles(params=None):
     for parameter, field in filters.items():
         value = str(params.get(parameter, "")).strip()
         if value:
-            queryset = queryset.filter(**{field: value})
+            if parameter in {"availability", "work_preference"}:
+                queryset = queryset.filter(
+                    (Q(published_snapshot={}) & Q(**{field: value}))
+                    | Q(**{f"published_snapshot__{parameter}": value})
+                )
+            else:
+                queryset = queryset.filter(published_snapshot={}, **{field: value})
     location = str(params.get("location", "")).strip()
     if location:
-        queryset = queryset.filter(location__icontains=location)
+        queryset = queryset.filter(
+            (Q(published_snapshot={}) & Q(location__icontains=location))
+            | Q(published_snapshot__location__icontains=location)
+        )
     ordering = params.get("order")
     if ordering == "name":
         return queryset.order_by("public_name").distinct()

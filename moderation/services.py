@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from profiles.models import Profile
+from profiles.models import Profile, ProfileRevision
 
 from .models import AuditLog
 
@@ -62,14 +62,20 @@ def moderate_profile(profile, actor, action, reason=""):
 
     previous_status = locked_profile.status
     now = timezone.now()
-    locked_profile.status = config["status"]
-    locked_profile.is_public = action == "approve"
+    keeps_previous_public_version = previous_status == Profile.Status.CHANGES_PENDING and action in {
+        "reject",
+        "request_changes",
+    }
+    locked_profile.status = Profile.Status.APPROVED if keeps_previous_public_version else config["status"]
+    locked_profile.is_public = action == "approve" or keeps_previous_public_version
     locked_profile.review_note = clean_reason
     locked_profile.reviewed_by = actor
     locked_profile.reviewed_at = now
     if action == "approve":
         locked_profile.approved_at = now
-    elif action in {"reject", "request_changes", "suspend", "restore"}:
+        locked_profile.published_snapshot = locked_profile.build_public_snapshot()
+        locked_profile.published_at = now
+    elif action in {"reject", "request_changes", "suspend", "restore"} and not keeps_previous_public_version:
         locked_profile.approved_at = None
     locked_profile.save(
         update_fields=(
@@ -79,6 +85,8 @@ def moderate_profile(profile, actor, action, reason=""):
             "reviewed_by",
             "reviewed_at",
             "approved_at",
+            "published_snapshot",
+            "published_at",
             "updated_at",
         )
     )
@@ -97,6 +105,24 @@ def moderate_profile(profile, actor, action, reason=""):
         target_id=str(locked_profile.pk),
         metadata={"previous_status": previous_status, "new_status": locked_profile.status},
     )
+    revision = locked_profile.revisions.filter(status=ProfileRevision.Status.PENDING).first()
+    revision_status = {
+        "approve": ProfileRevision.Status.APPROVED,
+        "reject": ProfileRevision.Status.REJECTED,
+        "request_changes": ProfileRevision.Status.REJECTED,
+    }.get(action)
+    if revision_status:
+        if revision is None:
+            revision = ProfileRevision(
+                profile=locked_profile,
+                submitted_by=locked_profile.user,
+                payload=locked_profile.build_public_snapshot(),
+            )
+        revision.status = revision_status
+        revision.review_note = clean_reason
+        revision.reviewed_by = actor
+        revision.reviewed_at = now
+        revision.save()
     from interactions.models import Notification
 
     notification_titles = {
