@@ -1,13 +1,71 @@
-<!doctype html>
-<html lang="pt">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CVLink</title>
-</head>
-<body>
-    <main>
-        <h1>CVLink</h1>
-    </main>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}CVLink | Encontra profissionais{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container hero-content">
+        <span class="eyebrow">Talento local. Oportunidades sem fronteiras.</span>
+        <h1>Liga talento a oportunidades.</h1>
+        <p class="hero-lead">Encontra profissionais por área, experiência e competência. Cria um perfil claro para mostrares o teu percurso.</p>
+
+        <form class="search-shell" method="get" action="{% url 'home' %}" role="search">
+            <label class="visually-hidden" for="search-query">Pesquisar profissionais</label>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
+                <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input id="search-query" name="q" type="search" value="{{ request.GET.q }}" placeholder="Ex.: Programador Django em Bissau">
+            <button class="btn btn-brand" type="submit">Pesquisar</button>
+        </form>
+        <p class="search-note">A pesquisa completa será ativada quando existirem perfis aprovados.</p>
+
+        <div class="hero-actions">
+            <a class="btn btn-brand btn-lg" href="{% url 'accounts:signup' %}">Criar o meu perfil</a>
+            <a class="btn btn-link-brand" href="#como-funciona">Perceber como funciona</a>
+        </div>
+    </div>
+</section>
+
+<section id="como-funciona" class="section-block">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">Simples desde o início</span>
+            <h2>Um percurso direto para profissionais e organizações</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <article class="feature-card h-100">
+                    <span class="step-number">01</span>
+                    <h3>Cria o teu perfil</h3>
+                    <p>Organiza experiência, formação e competências num único espaço profissional.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="feature-card h-100">
+                    <span class="step-number">02</span>
+                    <h3>Valida a informação</h3>
+                    <p>O CVLink revê os perfis antes da publicação para proteger a qualidade do diretório.</p>
+                </article>
+            </div>
+            <div class="col-md-4">
+                <article class="feature-card h-100">
+                    <span class="step-number">03</span>
+                    <h3>Recebe oportunidades</h3>
+                    <p>Organizações encontram o teu percurso e entram em contacto de forma protegida.</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="areas" class="section-block section-muted">
+    <div class="container area-callout">
+        <div>
+            <span class="eyebrow">Para todas as profissões</span>
+            <h2>Competências académicas, técnicas e profissionais</h2>
+            <p>Tecnologia, administração, saúde, educação, agricultura, comunicação e muitas outras áreas terão espaço no CVLink.</p>
+        </div>
+        <a class="btn btn-outline-brand btn-lg" href="{% url 'accounts:signup' %}">Juntar-me ao CVLink</a>
+    </div>
+</section>
+{% endblock %}

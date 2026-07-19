@@ -1,18 +1,27 @@
-<!doctype html>
-<html lang="pt">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Criar conta | CVLink</title>
-</head>
-<body>
-    <main>
+{% extends "base.html" %}
+
+{% block title %}Criar conta | CVLink{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-card">
+        <span class="eyebrow">Começa o teu percurso</span>
         <h1>Criar conta</h1>
-        <form method="post">
+        <p>Usa um email a que tenhas acesso. Os teus dados profissionais começam privados.</p>
+        <form method="post" novalidate>
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Criar conta</button>
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-help">{{ field.help_text|safe }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            {% for error in form.non_field_errors %}<div class="form-error mb-3">{{ error }}</div>{% endfor %}
+            <button class="btn btn-brand w-100" type="submit">Criar conta</button>
         </form>
-    </main>
-</body>
-</html>
+        <p class="auth-switch">Já tens conta? <a href="{% url 'accounts:login' %}">Inicia sessão</a>.</p>
+    </div>
+</section>
+{% endblock %}

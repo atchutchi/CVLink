@@ -52,6 +52,8 @@ class AuthenticationFlowTests(TestCase):
         response = self.client.get("/conta/painel/")
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Rascunho")
+        self.assertContains(response, "Completa o teu perfil")
 
     def test_user_can_logout_with_post(self):
         user = get_user_model().objects.create_user(

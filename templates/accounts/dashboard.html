@@ -1,14 +1,28 @@
-<!doctype html>
-<html lang="pt">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Painel | CVLink</title>
-</head>
-<body>
-    <main>
-        <h1>O teu painel</h1>
-        <p>{{ request.user.email }}</p>
-    </main>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Painel | CVLink{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="container dashboard-grid">
+        <div>
+            <span class="eyebrow">Área pessoal</span>
+            <h1>Olá{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}.</h1>
+            <p class="lead">Gere o teu percurso profissional e prepara o perfil para revisão.</p>
+        </div>
+        <aside class="status-card" aria-label="Estado do perfil">
+            <span>Estado do perfil</span>
+            <strong>{{ request.user.profile.get_status_display }}</strong>
+            <p>O teu perfil continua privado enquanto estiver em preparação.</p>
+        </aside>
+        <article class="dashboard-card">
+            <div>
+                <span class="step-number">Próximo passo</span>
+                <h2>Completa o teu perfil</h2>
+                <p>Na próxima fase poderás adicionar experiência, formação, competências e currículo.</p>
+            </div>
+            <button class="btn btn-brand" type="button" disabled aria-disabled="true">Disponível brevemente</button>
+        </article>
+    </div>
+</section>
+{% endblock %}
