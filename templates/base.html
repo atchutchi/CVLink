@@ -26,7 +26,7 @@
                 <img class="brand-image" src="{% static 'img/cvlink-logo.png' %}" alt="CVLink">
             </a>
             <div class="nav-discovery">
-                <a class="nav-link-custom" href="{% url 'search' %}">Pesquisar</a>
+                <a class="nav-link-custom" href="{% url 'home' %}#como-funciona">Como funciona</a>
                 <a class="nav-link-custom" href="{% url 'area-list' %}">Áreas</a>
             </div>
             <div class="nav-actions">
@@ -61,7 +61,7 @@
         <div class="container footer-content">
             <p class="mb-0">© {% now "Y" %} CVLink. Liga talento a oportunidades.</p>
             <nav aria-label="Navegação do rodapé">
-                <a href="#como-funciona">Como funciona</a>
+                <a href="{% url 'home' %}#como-funciona">Como funciona</a>
                 <a href="{% url 'area-list' %}">Áreas</a>
                 <a href="{% url 'search' %}">Pesquisar</a>
                 <a href="mailto:ferreira.atchutchi@gmail.com">Contacto</a>

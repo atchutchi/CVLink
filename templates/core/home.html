@@ -25,7 +25,7 @@
 
         <div class="hero-actions">
             <a class="btn btn-brand btn-lg" href="{% url 'accounts:signup' %}">Criar o meu perfil</a>
-            <a class="btn btn-link-brand" href="#como-funciona">Perceber como funciona</a>
+            <a class="btn btn-link-brand" href="#como-funciona">Saber como funciona <span aria-hidden="true">↓</span></a>
         </div>
     </div>
 </section>
@@ -33,29 +33,33 @@
 <section id="como-funciona" class="section-block">
     <div class="container">
         <div class="section-heading">
-            <span class="eyebrow">Simples desde o início</span>
-            <h2>Um percurso direto para profissionais e organizações</h2>
+            <span class="eyebrow">Como funciona</span>
+            <h2>Um percurso claro para encontrares e mostrares talento</h2>
+            <p class="section-lead">Se és profissional, crias uma presença credível. Se procuras talento, encontras perfis revistos e contactas sem expor dados pessoais.</p>
         </div>
         <div class="row g-4">
             <div class="col-md-4">
                 <article class="feature-card h-100">
                     <span class="step-number">01</span>
                     <h3>Cria o teu perfil</h3>
-                    <p>Organiza experiência, formação e competências num único espaço profissional.</p>
+                    <p>Conta a tua história profissional num só lugar, com experiência, formação, competências e disponibilidade.</p>
+                    <a class="card-link" href="{% url 'accounts:signup' %}">Começar perfil <span aria-hidden="true">→</span></a>
                 </article>
             </div>
             <div class="col-md-4">
                 <article class="feature-card h-100">
                     <span class="step-number">02</span>
-                    <h3>Valida a informação</h3>
-                    <p>O CVLink revê os perfis antes da publicação para proteger a qualidade do diretório.</p>
+                    <h3>Ganha confiança</h3>
+                    <p>A nossa equipa revê cada perfil antes da publicação. Só aparecem resultados aprovados e actualizados.</p>
+                    <a class="card-link" href="{% url 'area-list' %}">Explorar áreas <span aria-hidden="true">→</span></a>
                 </article>
             </div>
             <div class="col-md-4">
                 <article class="feature-card h-100">
                     <span class="step-number">03</span>
-                    <h3>Recebe oportunidades</h3>
-                    <p>Organizações encontram o teu percurso e entram em contacto de forma protegida.</p>
+                    <h3>Cria ligações</h3>
+                    <p>Organizações encontram o teu percurso e enviam uma mensagem protegida. O teu email permanece privado.</p>
+                    <a class="card-link" href="{% url 'search' %}">Ver profissionais <span aria-hidden="true">→</span></a>
                 </article>
             </div>
         </div>

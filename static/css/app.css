@@ -121,6 +121,13 @@ input:focus-visible {
     border-radius: 10px;
     padding: 9px 18px;
     font-weight: 700;
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease;
+    touch-action: manipulation;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(8, 38, 83, 0.12);
 }
 
 .btn-brand {
@@ -274,6 +281,13 @@ h3 {
     margin-bottom: 38px;
 }
 
+.section-lead {
+    max-width: 680px;
+    margin: 14px 0 0;
+    color: var(--color-slate-700);
+    font-size: 1.08rem;
+}
+
 .section-heading h2,
 .area-callout h2 {
     font-size: clamp(2rem, 4vw, 3rem);
@@ -295,6 +309,27 @@ h3 {
 .feature-card p,
 .area-callout p {
     color: var(--color-slate-700);
+}
+
+.feature-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 18px;
+    color: var(--color-navy-900);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.card-link:hover {
+    color: var(--color-orange-600);
 }
 
 .step-number {
@@ -523,6 +558,13 @@ h3 {
     box-shadow: 0 10px 30px rgba(8, 38, 83, 0.05);
 }
 
+.filter-help {
+    grid-column: 1 / -1;
+    margin: -4px 0 2px;
+    color: var(--color-slate-700);
+    font-size: 0.94rem;
+}
+
 .filter-panel label {
     display: block;
     margin-bottom: 6px;
@@ -545,6 +587,13 @@ h3 {
 
 .filter-panel .btn {
     align-self: end;
+}
+
+.filter-actions {
+    align-self: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .results-heading {
@@ -754,6 +803,24 @@ h3 {
     font-size: 1.15rem;
 }
 
+.area-card small {
+    margin-top: 12px;
+    color: var(--color-navy-700);
+    font-weight: 700;
+}
+
+.area-card:hover,
+.area-card:focus-visible {
+    border-color: var(--color-orange-500);
+    color: var(--color-navy-950);
+    box-shadow: var(--shadow-card);
+    transform: translateY(-2px);
+}
+
+.area-card {
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
 .area-specializations {
     margin-bottom: 30px;
 }
@@ -876,6 +943,19 @@ h3 {
 
     .filter-query {
         grid-column: auto;
+    }
+
+    .filter-help {
+        grid-column: auto;
+    }
+
+    .filter-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter-actions .btn {
+        width: 100%;
     }
 
     .result-card,

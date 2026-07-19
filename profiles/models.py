@@ -179,6 +179,8 @@ class Profile(models.Model):
             "work_preference_label": self.get_work_preference_display(),
             "skills": list(self.skills.values_list("name", flat=True)),
             "specializations": list(self.specializations.values_list("name", flat=True)),
+            "areas": list(self.specializations.values_list("area__name", flat=True).distinct()),
+            "sectors": list(self.specializations.values_list("area__sector__name", flat=True).distinct()),
             "experiences": [
                 {
                     "title": item.title,

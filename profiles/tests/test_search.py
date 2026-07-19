@@ -72,9 +72,11 @@ class PublicSearchTests(TestCase):
 
         detail = self.client.get(f"/profissionais/{self.public_profile.slug}/")
         search = self.client.get("/pesquisar/", {"location": "Bissau"})
+        search_by_text = self.client.get("/pesquisar/", {"q": "Bissau cidade"})
 
         self.assertNotContains(detail, "Bissau")
         self.assertNotContains(search, "Maria Sambu")
+        self.assertNotContains(search_by_text, "Maria Sambu")
 
     def test_cv_download_respects_visibility_and_disables_indexing(self):
         with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
@@ -120,6 +122,39 @@ class PublicSearchTests(TestCase):
 
         self.assertContains(approved_response, profile.public_display_name)
         self.assertNotContains(pending_response, profile.public_display_name)
+
+    def test_search_is_accent_insensitive_and_includes_profile_sections(self):
+        profile = self.public_profile
+        profile.professional_title = "Técnica de Comunicação"
+        profile.bio = "Gestão de relações públicas e comunicação institucional."
+        profile.save()
+        profile.experiences.create(
+            title="Gestora de projectos",
+            organization="CVLink",
+            description="Coordenação de equipas",
+            start_date="2022-01-01",
+        )
+
+        response = self.client.get("/pesquisar/", {"q": "comunicacao"})
+        self.assertContains(response, profile.public_name)
+        response = self.client.get("/pesquisar/", {"q": "coordenacao"})
+        self.assertContains(response, profile.public_name)
+
+    def test_filters_match_the_approved_snapshot_after_pending_changes(self):
+        profile = self.public_profile
+        profile.published_snapshot = profile.build_public_snapshot()
+        profile.status = Profile.Status.CHANGES_PENDING
+        profile.save()
+
+        response = self.client.get("/pesquisar/", {"specialization": self.specialization.slug})
+        self.assertContains(response, profile.public_name)
+        response = self.client.get("/pesquisar/", {"skill": self.skill.slug})
+        self.assertContains(response, profile.public_name)
+
+    def test_language_and_city_aliases_are_supported(self):
+        self.public_profile.languages.create(name="Português", level="fluent")
+        response = self.client.get("/pesquisar/", {"idioma": "portugues", "cidade": "Bissau"})
+        self.assertContains(response, self.public_profile.public_name)
 
     def test_area_page_lists_only_public_professionals(self):
         response = self.client.get(f"/areas/{self.area.slug}/")
