@@ -1,5 +1,8 @@
+from uuid import uuid4
+
 from django.conf import settings
 from django.db import models
+from django.utils.text import slugify
 
 from taxonomy.models import Skill, Specialization
 
@@ -36,6 +39,7 @@ class Profile(models.Model):
         related_name="profile",
         on_delete=models.CASCADE,
     )
+    slug = models.SlugField("slug público", max_length=190, unique=True, null=True, blank=True, editable=False)
     public_name = models.CharField("nome público", max_length=160, blank=True)
     professional_title = models.CharField("título profissional", max_length=180, blank=True)
     bio = models.TextField("biografia", blank=True)
@@ -104,6 +108,12 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.public_name or self.user.email
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.public_name or self.user.get_full_name() or self.user.email.split("@", 1)[0])
+            self.slug = f"{base or 'profissional'}-{uuid4().hex[:8]}"
+        return super().save(*args, **kwargs)
 
     def missing_required_sections(self):
         checks = (

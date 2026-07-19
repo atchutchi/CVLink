@@ -1,0 +1,11 @@
+<article class="result-card">
+    <div class="profile-avatar" aria-hidden="true">{{ profile.public_name|slice:":1"|upper }}</div>
+    <div class="result-card-body">
+        <h2><a href="{% url 'public-profile' profile.slug %}">{{ profile.public_name }}</a></h2>
+        <p class="result-title">{{ profile.professional_title }}</p>
+        <p>{{ profile.location }}{% if profile.country %}, {{ profile.country }}{% endif %}</p>
+        <div class="skill-tags">
+            {% for skill in profile.skills.all|slice:":5" %}<span>{{ skill.name }}</span>{% endfor %}
+        </div>
+    </div>
+</article>

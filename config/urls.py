@@ -3,6 +3,8 @@ from django.urls import include, path
 
 
 urlpatterns = [
+    path("", include("profiles.public_urls")),
+    path("", include("taxonomy.urls")),
     path("", include("core.urls")),
     path("conta/", include("accounts.urls")),
     path("perfil/", include("profiles.urls")),
