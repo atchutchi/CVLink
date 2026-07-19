@@ -1,0 +1,87 @@
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+
+class ProfileViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email="maria@example.com",
+            password="PalavraPasseSegura2026!",
+        )
+
+    def test_edit_requires_authentication(self):
+        response = self.client.get("/perfil/editar/")
+
+        self.assertRedirects(response, "/conta/entrar/?next=/perfil/editar/")
+
+    def test_user_can_update_own_profile(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/perfil/editar/",
+            {
+                "public_name": "Maria Sambu",
+                "professional_title": "Programadora",
+                "bio": "Experiência em desenvolvimento de serviços digitais.",
+                "location": "Bissau",
+                "country": "Guiné-Bissau",
+                "availability": "open",
+                "work_preference": "hybrid",
+                "contact_visibility": "form",
+            },
+        )
+
+        self.assertRedirects(response, "/conta/painel/")
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.professional_title, "Programadora")
+
+    def test_incomplete_profile_cannot_be_submitted(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/perfil/submeter/",
+            {
+                "consent_profile_public": "on",
+                "consent_contact": "on",
+                "accept_terms": "on",
+                "accept_privacy": "on",
+            },
+        )
+
+        self.assertRedirects(response, "/conta/painel/")
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.status, "draft")
+
+    def test_user_can_add_experience(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            "/perfil/secao/experiencia/adicionar/",
+            {
+                "title": "Programadora",
+                "organization": "CVLink",
+                "location": "Bissau",
+                "description": "Desenvolvimento da plataforma.",
+                "start_date": "2025-01-01",
+                "is_current": "on",
+            },
+        )
+
+        self.assertRedirects(response, "/conta/painel/")
+        self.assertTrue(self.user.profile.experiences.filter(title="Programadora").exists())
+
+    def test_user_cannot_delete_another_users_experience(self):
+        other = get_user_model().objects.create_user(
+            email="outra@example.com",
+            password="PalavraPasseSegura2026!",
+        )
+        experience = other.profile.experiences.create(
+            title="Gestora",
+            organization="Outra organização",
+            start_date="2025-01-01",
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(f"/perfil/secao/experiencia/{experience.pk}/eliminar/")
+
+        self.assertEqual(response.status_code, 404)

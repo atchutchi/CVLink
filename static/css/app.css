@@ -428,6 +428,86 @@ h3 {
     color: var(--color-slate-700);
 }
 
+.profile-editor {
+    max-width: 900px;
+}
+
+.editor-card {
+    padding: clamp(24px, 5vw, 44px);
+    border: 1px solid var(--color-slate-200);
+    border-radius: var(--radius-lg);
+    background: var(--color-white);
+    box-shadow: var(--shadow-card);
+}
+
+.editor-card input:not([type="checkbox"]),
+.editor-card textarea,
+.editor-card select {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid #aeb9c8;
+    border-radius: 9px;
+    background: var(--color-white);
+}
+
+.editor-card select[multiple] {
+    min-height: 150px;
+}
+
+.editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.profile-progress {
+    height: 9px;
+    margin: 18px 0 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--color-slate-200);
+}
+
+.profile-progress span {
+    height: 100%;
+    display: block;
+    border-radius: inherit;
+    background: var(--color-orange-600);
+}
+
+.dashboard-card-stack {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.missing-list {
+    columns: 2;
+    margin: 16px 0 0;
+    color: var(--color-slate-700);
+}
+
+.section-row,
+.section-actions,
+.profile-entry {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.section-actions {
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.profile-entry {
+    padding: 14px 0;
+    border-top: 1px solid var(--color-slate-200);
+}
+
 .site-footer {
     padding: 30px 0;
     color: #dce6f5;
@@ -493,7 +573,9 @@ h3 {
     .hero-actions,
     .footer-content,
     .footer-content nav,
-    .dashboard-card {
+    .dashboard-card,
+    .section-row,
+    .editor-actions {
         flex-direction: column;
         align-items: stretch;
     }
@@ -513,6 +595,11 @@ h3 {
 
     .footer-content nav {
         gap: 4px;
+    }
+
+    .section-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 

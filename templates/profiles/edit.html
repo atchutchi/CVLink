@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Editar perfil | CVLink{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="container profile-editor">
+        <div class="section-heading">
+            <span class="eyebrow">Perfil profissional</span>
+            <h1>Edita os teus dados</h1>
+            <p>As alterações ficam privadas até submeteres o perfil para revisão.</p>
+        </div>
+        <form class="editor-card" method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-help">{{ field.help_text|safe }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            <div class="editor-actions">
+                <a class="btn btn-outline-brand" href="{% url 'accounts:dashboard' %}">Cancelar</a>
+                <button class="btn btn-brand" type="submit">Guardar perfil</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

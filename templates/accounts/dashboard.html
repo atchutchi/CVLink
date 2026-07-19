@@ -14,6 +14,10 @@
             <span>Estado do perfil</span>
             <strong>{{ request.user.profile.get_status_display }}</strong>
             <p>O teu perfil continua privado enquanto estiver em preparação.</p>
+            <div class="profile-progress" role="progressbar" aria-valuenow="{{ request.user.profile.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                <span style="width: {{ request.user.profile.completion_percentage }}%"></span>
+            </div>
+            <small>{{ request.user.profile.completion_percentage }}% concluído</small>
         </aside>
         <article class="dashboard-card">
             <div>
@@ -21,8 +25,55 @@
                 <h2>Completa o teu perfil</h2>
                 <p>Na próxima fase poderás adicionar experiência, formação, competências e currículo.</p>
             </div>
-            <button class="btn btn-brand" type="button" disabled aria-disabled="true">Disponível brevemente</button>
+            <a class="btn btn-brand" href="{% url 'profiles:edit' %}">Editar perfil</a>
         </article>
+        <section class="dashboard-card dashboard-card-stack profile-sections" aria-labelledby="percurso-title">
+            <div class="section-row">
+                <div>
+                    <span class="step-number">Percurso</span>
+                    <h2 id="percurso-title">Experiência e formação</h2>
+                </div>
+                <div class="section-actions">
+                    <a class="btn btn-outline-brand" href="{% url 'profiles:section_add' 'experiencia' %}">Adicionar experiência</a>
+                    <a class="btn btn-outline-brand" href="{% url 'profiles:section_add' 'formacao' %}">Adicionar formação</a>
+                    <a class="btn btn-outline-brand" href="{% url 'profiles:section_add' 'certificacao' %}">Adicionar certificação</a>
+                    <a class="btn btn-outline-brand" href="{% url 'profiles:section_add' 'idioma' %}">Adicionar idioma</a>
+                </div>
+            </div>
+            {% for entry in request.user.profile.experiences.all %}
+                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'experiencia' entry.pk %}">Eliminar</a></div>
+            {% endfor %}
+            {% for entry in request.user.profile.education_entries.all %}
+                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'formacao' entry.pk %}">Eliminar</a></div>
+            {% endfor %}
+            {% for entry in request.user.profile.certifications.all %}
+                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'certificacao' entry.pk %}">Eliminar</a></div>
+            {% endfor %}
+            {% for entry in request.user.profile.languages.all %}
+                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'idioma' entry.pk %}">Eliminar</a></div>
+            {% endfor %}
+        </section>
+        {% if request.user.profile.missing_required_sections %}
+            <article class="dashboard-card dashboard-card-stack">
+                <div>
+                    <span class="step-number">Ainda falta</span>
+                    <h2>Secções obrigatórias</h2>
+                    <ul class="missing-list">
+                        {% for section in request.user.profile.missing_required_sections %}<li>{{ section|capfirst }}</li>{% endfor %}
+                    </ul>
+                </div>
+            </article>
+        {% else %}
+            <form class="dashboard-card dashboard-card-stack" method="post" action="{% url 'profiles:submit' %}">
+                {% csrf_token %}
+                <h2>Submeter para revisão</h2>
+                <label><input type="checkbox" name="consent_profile_public" required> Aceito que o perfil fique público depois da aprovação.</label>
+                <label><input type="checkbox" name="consent_contact" required> Aceito receber contactos através do CVLink.</label>
+                <label><input type="checkbox" name="accept_terms" required> Aceito os termos de utilização, versão 1.0.</label>
+                <label><input type="checkbox" name="accept_privacy" required> Aceito a política de privacidade, versão 1.0.</label>
+                <button class="btn btn-brand" type="submit">Submeter perfil</button>
+            </form>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

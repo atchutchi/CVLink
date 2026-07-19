@@ -15,6 +15,21 @@ class Profile(models.Model):
         ARCHIVED = "archived", "Arquivado"
         DELETED = "deleted", "Eliminado"
 
+    class Availability(models.TextChoices):
+        AVAILABLE = "available", "Disponível"
+        OPEN = "open", "Aberto a propostas"
+        UNAVAILABLE = "unavailable", "Indisponível"
+
+    class WorkPreference(models.TextChoices):
+        ONSITE = "onsite", "Presencial"
+        REMOTE = "remote", "Remoto"
+        HYBRID = "hybrid", "Híbrido"
+
+    class ContactVisibility(models.TextChoices):
+        FORM = "form", "Apenas formulário"
+        REGISTERED = "registered", "Utilizadores registados"
+        PUBLIC = "public", "Público"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name="utilizador",
@@ -25,7 +40,33 @@ class Profile(models.Model):
     professional_title = models.CharField("título profissional", max_length=180, blank=True)
     bio = models.TextField("biografia", blank=True)
     location = models.CharField("localização", max_length=160, blank=True)
+    country = models.CharField("país", max_length=100, default="Guiné-Bissau")
+    phone = models.CharField("telefone", max_length=40, blank=True)
+    whatsapp = models.CharField("WhatsApp", max_length=40, blank=True)
+    website = models.URLField("website", blank=True)
+    linkedin_url = models.URLField("LinkedIn", blank=True)
+    availability = models.CharField(
+        "disponibilidade",
+        max_length=20,
+        choices=Availability.choices,
+        default=Availability.OPEN,
+    )
+    work_preference = models.CharField(
+        "preferência de trabalho",
+        max_length=20,
+        choices=WorkPreference.choices,
+        default=WorkPreference.HYBRID,
+    )
+    willing_to_relocate = models.BooleanField("disponível para mudança", default=False)
+    contact_visibility = models.CharField(
+        "visibilidade dos contactos",
+        max_length=20,
+        choices=ContactVisibility.choices,
+        default=ContactVisibility.FORM,
+    )
     photo = models.ImageField("fotografia", upload_to="profile_photos/%Y/%m/", blank=True)
+    cv_file = models.FileField("currículo em PDF", upload_to="resumes/%Y/%m/", blank=True)
+    cv_uploaded_at = models.DateTimeField("currículo atualizado em", null=True, blank=True)
     status = models.CharField(
         "estado",
         max_length=24,
@@ -46,6 +87,13 @@ class Profile(models.Model):
         related_name="profiles",
         blank=True,
     )
+    consent_profile_public = models.BooleanField("consentimento para perfil público", default=False)
+    consent_contact = models.BooleanField("consentimento para contacto", default=False)
+    consent_marketing = models.BooleanField("consentimento de marketing", default=False)
+    accepted_terms_version = models.CharField("versão dos termos", max_length=30, blank=True)
+    accepted_terms_at = models.DateTimeField("termos aceites em", null=True, blank=True)
+    accepted_privacy_version = models.CharField("versão da privacidade", max_length=30, blank=True)
+    accepted_privacy_at = models.DateTimeField("privacidade aceite em", null=True, blank=True)
     created_at = models.DateTimeField("criado em", auto_now_add=True)
     updated_at = models.DateTimeField("atualizado em", auto_now=True)
 
@@ -56,3 +104,104 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.public_name or self.user.email
+
+    def missing_required_sections(self):
+        checks = (
+            ("nome público", bool(self.public_name.strip())),
+            ("título profissional", bool(self.professional_title.strip())),
+            ("biografia", bool(self.bio.strip())),
+            ("localização", bool(self.location.strip())),
+            ("especialização", self.specializations.exists()),
+            ("competência", self.skills.exists()),
+            ("experiência", self.experiences.exists()),
+            ("formação", self.education_entries.exists()),
+            ("idioma", self.languages.exists()),
+        )
+        return [label for label, complete in checks if not complete]
+
+    @property
+    def completion_percentage(self):
+        total = 9
+        return round(((total - len(self.missing_required_sections())) / total) * 100)
+
+    @property
+    def can_submit(self):
+        return not self.missing_required_sections()
+
+
+class Experience(models.Model):
+    profile = models.ForeignKey(Profile, related_name="experiences", on_delete=models.CASCADE)
+    title = models.CharField("cargo", max_length=180)
+    organization = models.CharField("organização", max_length=180)
+    location = models.CharField("localização", max_length=160, blank=True)
+    description = models.TextField("descrição", blank=True)
+    start_date = models.DateField("data de início")
+    end_date = models.DateField("data de fim", null=True, blank=True)
+    is_current = models.BooleanField("cargo atual", default=False)
+
+    class Meta:
+        ordering = ("-start_date", "-id")
+        verbose_name = "experiência profissional"
+        verbose_name_plural = "experiências profissionais"
+
+    def __str__(self):
+        return f"{self.title} em {self.organization}"
+
+
+class Education(models.Model):
+    profile = models.ForeignKey(Profile, related_name="education_entries", on_delete=models.CASCADE)
+    institution = models.CharField("instituição", max_length=180)
+    qualification = models.CharField("qualificação", max_length=180)
+    field_of_study = models.CharField("área de estudo", max_length=180, blank=True)
+    start_date = models.DateField("data de início", null=True, blank=True)
+    end_date = models.DateField("data de fim", null=True, blank=True)
+    description = models.TextField("descrição", blank=True)
+
+    class Meta:
+        ordering = ("-end_date", "-id")
+        verbose_name = "formação"
+        verbose_name_plural = "formações"
+
+    def __str__(self):
+        return f"{self.qualification}, {self.institution}"
+
+
+class Certification(models.Model):
+    profile = models.ForeignKey(Profile, related_name="certifications", on_delete=models.CASCADE)
+    name = models.CharField("certificação", max_length=180)
+    issuer = models.CharField("entidade emissora", max_length=180)
+    issue_date = models.DateField("data de emissão", null=True, blank=True)
+    expiry_date = models.DateField("data de validade", null=True, blank=True)
+    credential_url = models.URLField("ligação da credencial", blank=True)
+
+    class Meta:
+        ordering = ("-issue_date", "name")
+        verbose_name = "certificação"
+        verbose_name_plural = "certificações"
+
+    def __str__(self):
+        return self.name
+
+
+class ProfileLanguage(models.Model):
+    class Level(models.TextChoices):
+        BASIC = "basic", "Básico"
+        INTERMEDIATE = "intermediate", "Intermédio"
+        ADVANCED = "advanced", "Avançado"
+        FLUENT = "fluent", "Fluente"
+        NATIVE = "native", "Nativo"
+
+    profile = models.ForeignKey(Profile, related_name="languages", on_delete=models.CASCADE)
+    name = models.CharField("idioma", max_length=100)
+    level = models.CharField("nível", max_length=20, choices=Level.choices)
+
+    class Meta:
+        ordering = ("name",)
+        constraints = [
+            models.UniqueConstraint(fields=("profile", "name"), name="unique_profile_language")
+        ]
+        verbose_name = "idioma"
+        verbose_name_plural = "idiomas"
+
+    def __str__(self):
+        return f"{self.name}, {self.get_level_display()}"
