@@ -5,7 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{% block meta_description %}CVLink liga profissionais a empresas e oportunidades.{% endblock %}">
-    <meta name="robots" content="{% block robots %}index,follow{% endblock %}">
+    <meta name="robots" content="{% block robots %}noindex,nofollow{% endblock %}">
+    {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
+    <meta property="og:site_name" content="CVLink">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}CVLink, talento ligado a oportunidades{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Encontra profissionais e oportunidades através do CVLink.{% endblock %}">
+    {% if canonical_url %}<meta property="og:url" content="{{ canonical_url }}">{% endif %}
     <title>{% block title %}CVLink{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'img/cvlink-logo.png' %}">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">

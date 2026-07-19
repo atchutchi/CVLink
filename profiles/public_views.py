@@ -1,5 +1,6 @@
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 
 from taxonomy.models import Area, Sector, Skill, Specialization
 
@@ -33,6 +34,7 @@ def public_profile(request, slug):
     context = {
         "profile": profile,
         "display": profile.public_payload,
+        "canonical_url": request.build_absolute_uri(reverse("public-profile", args=(profile.slug,))),
         "like_count": profile.profilelike_set.count(),
         "is_favorite": False,
         "is_liked": False,

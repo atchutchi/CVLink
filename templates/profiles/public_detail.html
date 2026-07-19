@@ -3,8 +3,12 @@
 {% block title %}{{ display.public_name }}, {{ display.professional_title }} | CVLink{% endblock %}
 {% block meta_description %}Conhece o perfil profissional de {{ display.public_name }}, experiência, competências e formação.{% endblock %}
 {% block robots %}{% if is_preview %}noindex,nofollow{% else %}index,follow{% endif %}{% endblock %}
+{% block og_type %}profile{% endblock %}
+{% block og_title %}{{ display.public_name }}, {{ display.professional_title }} | CVLink{% endblock %}
+{% block og_description %}Perfil profissional de {{ display.public_name }} no CVLink.{% endblock %}
 
 {% block content %}
+{% if not is_preview %}<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "{{ display.public_name|escapejs }}", "jobTitle": "{{ display.professional_title|escapejs }}", "address": {"@type": "PostalAddress", "addressLocality": "{{ display.location|escapejs }}", "addressCountry": "{{ display.country|escapejs }}"}, "url": "{{ canonical_url|escapejs }}"}</script>{% endif %}
 <section class="public-profile-page">
     <div class="container public-profile-grid">
         <main class="profile-main">

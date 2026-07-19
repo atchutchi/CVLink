@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
 {% block title %}CVLink | Encontra profissionais{% endblock %}
+{% block robots %}index,follow{% endblock %}
+{% block og_title %}CVLink, encontra profissionais na Guiné-Bissau{% endblock %}
+{% block og_description %}Pesquisa talento por área, competência, localização e disponibilidade.{% endblock %}
 
 {% block content %}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"CVLink","url":"{{ canonical_url|escapejs }}","potentialAction":{"@type":"SearchAction","target":"{{ canonical_url|escapejs }}pesquisar/?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
 <section class="hero-section">
     <div class="container hero-content">
         <span class="eyebrow">Talento local. Oportunidades sem fronteiras.</span>
