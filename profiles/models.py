@@ -79,6 +79,17 @@ class Profile(models.Model):
         db_index=True,
     )
     is_public = models.BooleanField("público", default=False, db_index=True)
+    approved_at = models.DateTimeField("aprovado em", null=True, blank=True)
+    reviewed_at = models.DateTimeField("revisto em", null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="revisto por",
+        related_name="reviewed_profiles",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    review_note = models.TextField("nota de revisão", blank=True)
     specializations = models.ManyToManyField(
         Specialization,
         verbose_name="especializações",

@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "accounts",
     "taxonomy",
     "profiles",
+    "moderation",
     "core",
 ]
 

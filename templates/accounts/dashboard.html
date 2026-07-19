@@ -13,7 +13,17 @@
         <aside class="status-card" aria-label="Estado do perfil">
             <span>Estado do perfil</span>
             <strong>{{ request.user.profile.get_status_display }}</strong>
-            <p>O teu perfil continua privado enquanto estiver em preparação.</p>
+            {% if request.user.profile.status == "approved" %}
+                <p>O perfil está publicado no diretório.</p>
+            {% elif request.user.profile.status == "pending" or request.user.profile.status == "changes_pending" %}
+                <p>O perfil está a aguardar análise administrativa.</p>
+            {% elif request.user.profile.status == "rejected" %}
+                <p>Corrige o perfil de acordo com a nota de revisão.</p>
+            {% elif request.user.profile.status == "suspended" %}
+                <p>O perfil e o acesso à conta estão suspensos.</p>
+            {% else %}
+                <p>O perfil continua privado enquanto estiver em preparação.</p>
+            {% endif %}
             <div class="profile-progress" role="progressbar" aria-valuenow="{{ request.user.profile.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
                 <span style="width: {{ request.user.profile.completion_percentage }}%"></span>
             </div>
@@ -53,7 +63,20 @@
                 <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'idioma' entry.pk %}">Eliminar</a></div>
             {% endfor %}
         </section>
-        {% if request.user.profile.missing_required_sections %}
+        {% if request.user.profile.status == "approved" %}
+            <article class="dashboard-card dashboard-card-stack">
+                <div><span class="step-number">Publicado</span><h2>O teu perfil está disponível</h2><p>Qualquer alteração enviada volta a exigir aprovação administrativa.</p></div>
+                <a class="btn btn-brand" href="{% url 'public-profile' request.user.profile.slug %}">Ver perfil público</a>
+            </article>
+        {% elif request.user.profile.status == "pending" or request.user.profile.status == "changes_pending" %}
+            <article class="dashboard-card dashboard-card-stack">
+                <div><span class="step-number">Em análise</span><h2>Aguarda a decisão da equipa</h2><p>Receberás uma atualização quando a revisão terminar.</p></div>
+            </article>
+        {% elif request.user.profile.status == "suspended" %}
+            <article class="dashboard-card dashboard-card-stack">
+                <div><span class="step-number">Conta suspensa</span><h2>Contacta a administração</h2><p>{{ request.user.profile.review_note|default:"O acesso foi suspenso por decisão administrativa." }}</p></div>
+            </article>
+        {% elif request.user.profile.missing_required_sections %}
             <article class="dashboard-card dashboard-card-stack">
                 <div>
                     <span class="step-number">Ainda falta</span>
@@ -64,6 +87,7 @@
                 </div>
             </article>
         {% else %}
+            {% if request.user.profile.status == "rejected" and request.user.profile.review_note %}<div class="form-error" role="alert"><strong>Motivo da rejeição:</strong> {{ request.user.profile.review_note }}</div>{% endif %}
             <form class="dashboard-card dashboard-card-stack" method="post" action="{% url 'profiles:submit' %}">
                 {% csrf_token %}
                 <h2>Submeter para revisão</h2>

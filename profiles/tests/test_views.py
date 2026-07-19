@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from profiles.models import Profile
+
 
 class ProfileViewTests(TestCase):
     def setUp(self):
@@ -34,6 +36,31 @@ class ProfileViewTests(TestCase):
         self.assertRedirects(response, "/conta/painel/")
         self.user.profile.refresh_from_db()
         self.assertEqual(self.user.profile.professional_title, "Programadora")
+
+    def test_editing_approved_profile_requires_new_review(self):
+        profile = self.user.profile
+        profile.status = Profile.Status.APPROVED
+        profile.is_public = True
+        profile.save()
+        self.client.force_login(self.user)
+
+        self.client.post(
+            "/perfil/editar/",
+            {
+                "public_name": "Maria Sambu",
+                "professional_title": "Programadora sénior",
+                "bio": "Experiência em desenvolvimento de serviços digitais.",
+                "location": "Bissau",
+                "country": "Guiné-Bissau",
+                "availability": "open",
+                "work_preference": "hybrid",
+                "contact_visibility": "form",
+            },
+        )
+
+        profile.refresh_from_db()
+        self.assertEqual(profile.status, Profile.Status.CHANGES_PENDING)
+        self.assertFalse(profile.is_public)
 
     def test_incomplete_profile_cannot_be_submitted(self):
         self.client.force_login(self.user)

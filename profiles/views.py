@@ -22,12 +22,19 @@ SECTION_CONFIG = {
 }
 
 
+def mark_approved_profile_for_review(profile):
+    if profile.status == Profile.Status.APPROVED:
+        profile.status = Profile.Status.CHANGES_PENDING
+        profile.is_public = False
+
+
 @login_required
 def edit_profile(request):
     profile = request.user.profile
     form = ProfileForm(request.POST or None, request.FILES or None, instance=profile)
     if request.method == "POST" and form.is_valid():
         updated = form.save(commit=False)
+        mark_approved_profile_for_review(updated)
         if "cv_file" in request.FILES:
             updated.cv_uploaded_at = timezone.now()
         updated.save()
@@ -79,6 +86,8 @@ def add_section(request, section):
         entry = form.save(commit=False)
         entry.profile = request.user.profile
         entry.save()
+        mark_approved_profile_for_review(entry.profile)
+        entry.profile.save()
         messages.success(request, f"{title} adicionada com sucesso.")
         return redirect("accounts:dashboard")
     return render(request, "profiles/section_form.html", {"form": form, "title": title})
@@ -90,6 +99,9 @@ def delete_section(request, section, pk):
     entry = get_object_or_404(model, pk=pk, profile=request.user.profile)
     if request.method == "POST":
         entry.delete()
+        profile = request.user.profile
+        mark_approved_profile_for_review(profile)
+        profile.save()
         messages.success(request, f"{title} eliminada.")
         return redirect("accounts:dashboard")
     return render(request, "profiles/section_confirm_delete.html", {"entry": entry, "title": title})

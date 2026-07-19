@@ -9,7 +9,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ("status", "is_public")
     search_fields = ("public_name", "user__email", "professional_title", "location")
     filter_horizontal = ("specializations", "skills")
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("approved_at", "reviewed_at", "reviewed_by", "review_note", "created_at", "updated_at")
 
 
 admin.site.register(Experience)
