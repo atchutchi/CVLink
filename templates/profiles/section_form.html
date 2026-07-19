@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Adicionar {{ title }} | CVLink{% endblock %}
+{% block title %}{% if is_editing %}Editar{% else %}Adicionar{% endif %} {{ title }} | CVLink{% endblock %}
 
 {% block content %}
 <section class="dashboard-section">
     <div class="container profile-editor">
         <div class="section-heading">
             <span class="eyebrow">Perfil profissional</span>
-            <h1>Adicionar {{ title|lower }}</h1>
+            <h1>{% if is_editing %}Editar{% else %}Adicionar{% endif %} {{ title|lower }}</h1>
         </div>
         <form class="editor-card" method="post" novalidate>
             {% csrf_token %}

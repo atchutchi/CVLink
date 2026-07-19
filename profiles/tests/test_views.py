@@ -97,6 +97,36 @@ class ProfileViewTests(TestCase):
         self.assertRedirects(response, "/conta/painel/")
         self.assertTrue(self.user.profile.experiences.filter(title="Programadora").exists())
 
+    def test_user_can_edit_own_experience(self):
+        experience = self.user.profile.experiences.create(
+            title="Programadora",
+            organization="CVLink",
+            start_date="2025-01-01",
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            f"/perfil/secao/experiencia/{experience.pk}/editar/",
+            {
+                "title": "Programadora sénior",
+                "organization": "CVLink",
+                "start_date": "2025-01-01",
+            },
+        )
+        self.assertRedirects(response, "/conta/painel/")
+        experience.refresh_from_db()
+        self.assertEqual(experience.title, "Programadora sénior")
+
+    def test_draft_preview_is_private_and_not_indexed(self):
+        self.user.profile.public_name = "Maria Sambu"
+        self.user.profile.save()
+        response = self.client.get("/perfil/pre-visualizar/")
+        self.assertRedirects(response, "/conta/entrar/?next=/perfil/pre-visualizar/")
+
+        self.client.force_login(self.user)
+        response = self.client.get("/perfil/pre-visualizar/")
+        self.assertContains(response, "Pré-visualização privada")
+        self.assertContains(response, 'content="noindex,nofollow"')
+
     def test_user_cannot_delete_another_users_experience(self):
         other = get_user_model().objects.create_user(
             email="outra@example.com",

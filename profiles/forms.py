@@ -41,8 +41,8 @@ class ProfileForm(forms.ModelForm):
         FileExtensionValidator(["pdf"], "O currículo deve ser um ficheiro PDF.")(upload)
         if getattr(upload, "content_type", "application/pdf") != "application/pdf":
             raise ValidationError("O currículo deve ser um ficheiro PDF.")
-        if upload.size > 5 * 1024 * 1024:
-            raise ValidationError("O currículo não pode exceder 5 MB.")
+        if upload.size > 10 * 1024 * 1024:
+            raise ValidationError("O currículo não pode exceder 10 MB.")
         return upload
 
 
@@ -56,6 +56,16 @@ class ExperienceForm(forms.ModelForm):
         exclude = ("profile",)
         widgets = {"start_date": DateInput(), "end_date": DateInput(), "description": forms.Textarea(attrs={"rows": 4})}
 
+    def clean(self):
+        cleaned = super().clean()
+        start_date = cleaned.get("start_date")
+        end_date = cleaned.get("end_date")
+        if start_date and end_date and end_date < start_date:
+            self.add_error("end_date", "A data de fim não pode ser anterior à data de início.")
+        if cleaned.get("is_current") and end_date:
+            self.add_error("end_date", "Um cargo actual não pode ter data de fim.")
+        return cleaned
+
 
 class EducationForm(forms.ModelForm):
     class Meta:
@@ -63,12 +73,24 @@ class EducationForm(forms.ModelForm):
         exclude = ("profile",)
         widgets = {"start_date": DateInput(), "end_date": DateInput(), "description": forms.Textarea(attrs={"rows": 4})}
 
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("start_date") and cleaned.get("end_date") and cleaned["end_date"] < cleaned["start_date"]:
+            self.add_error("end_date", "A data de fim não pode ser anterior à data de início.")
+        return cleaned
+
 
 class CertificationForm(forms.ModelForm):
     class Meta:
         model = Certification
         exclude = ("profile",)
         widgets = {"issue_date": DateInput(), "expiry_date": DateInput()}
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("issue_date") and cleaned.get("expiry_date") and cleaned["expiry_date"] < cleaned["issue_date"]:
+            self.add_error("expiry_date", "A validade não pode ser anterior à emissão.")
+        return cleaned
 
 
 class ProfileLanguageForm(forms.ModelForm):

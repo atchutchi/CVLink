@@ -1156,6 +1156,16 @@ h3 {
     margin: 4px 0 0;
 }
 
+.preview-banner {
+    padding: 12px 16px;
+    margin: 16px 0;
+    border: 1px solid #f4b15c;
+    border-radius: 12px;
+    background: #fff8ed;
+    color: var(--color-navy);
+    font-weight: 700;
+}
+
 .form-page,
 .private-page {
     min-height: 70vh;

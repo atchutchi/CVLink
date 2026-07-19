@@ -111,6 +111,35 @@ def add_section(request, section):
 
 
 @login_required
+def edit_section(request, section, pk):
+    model, form_class, title = get_section_config(section)
+    entry = get_object_or_404(model, pk=pk, profile=request.user.profile)
+    form = form_class(request.POST or None, instance=entry)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        profile = request.user.profile
+        mark_approved_profile_for_review(profile)
+        profile.save()
+        messages.success(request, f"{title} actualizada com sucesso.")
+        return redirect("accounts:dashboard")
+    return render(
+        request,
+        "profiles/section_form.html",
+        {"form": form, "title": title, "is_editing": True},
+    )
+
+
+@login_required
+def preview_profile(request):
+    profile = request.user.profile
+    return render(
+        request,
+        "profiles/public_detail.html",
+        {"profile": profile, "like_count": 0, "is_preview": True},
+    )
+
+
+@login_required
 def delete_section(request, section, pk):
     model, _form_class, title = get_section_config(section)
     entry = get_object_or_404(model, pk=pk, profile=request.user.profile)

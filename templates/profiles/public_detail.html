@@ -2,15 +2,17 @@
 
 {% block title %}{{ profile.public_name }}, {{ profile.professional_title }} | CVLink{% endblock %}
 {% block meta_description %}Conhece o perfil profissional de {{ profile.public_name }}, experiência, competências e formação.{% endblock %}
+{% block robots %}{% if is_preview %}noindex,nofollow{% else %}index,follow{% endif %}{% endblock %}
 
 {% block content %}
 <section class="public-profile-page">
     <div class="container public-profile-grid">
         <main class="profile-main">
             <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{% url 'search' %}">Profissionais</a><span>/</span><span>{{ profile.public_name }}</span></nav>
+            {% if is_preview %}<div class="preview-banner" role="status">Pré-visualização privada. Esta página não aparece na pesquisa.</div>{% endif %}
             <header class="profile-hero">
                 <div class="profile-avatar profile-avatar-large" aria-hidden="true">{{ profile.public_name|slice:":1"|upper }}</div>
-                <div><span class="status-approved">Perfil aprovado</span><h1>{{ profile.public_name }}</h1><p class="profile-headline">{{ profile.professional_title }}</p><p>{{ profile.location }}, {{ profile.country }}</p></div>
+                <div><span class="status-approved">{% if is_preview %}Pré-visualização{% else %}Perfil aprovado{% endif %}</span><h1>{{ profile.public_name }}</h1><p class="profile-headline">{{ profile.professional_title }}</p><p>{{ profile.location }}, {{ profile.country }}</p></div>
             </header>
             <section class="profile-content-card"><h2>Sobre</h2><p>{{ profile.bio|linebreaksbr }}</p></section>
             <section class="profile-content-card"><h2>Competências</h2><div class="skill-tags">{% for skill in profile.skills.all %}<span>{{ skill.name }}</span>{% endfor %}</div></section>

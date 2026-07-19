@@ -64,18 +64,19 @@
                 </div>
             </div>
             {% for entry in request.user.profile.experiences.all %}
-                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'experiencia' entry.pk %}">Eliminar</a></div>
+                <div class="profile-entry"><strong>{{ entry }}</strong><span><a href="{% url 'profiles:section_edit' 'experiencia' entry.pk %}">Editar</a> <a href="{% url 'profiles:section_delete' 'experiencia' entry.pk %}">Eliminar</a></span></div>
             {% endfor %}
             {% for entry in request.user.profile.education_entries.all %}
-                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'formacao' entry.pk %}">Eliminar</a></div>
+                <div class="profile-entry"><strong>{{ entry }}</strong><span><a href="{% url 'profiles:section_edit' 'formacao' entry.pk %}">Editar</a> <a href="{% url 'profiles:section_delete' 'formacao' entry.pk %}">Eliminar</a></span></div>
             {% endfor %}
             {% for entry in request.user.profile.certifications.all %}
-                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'certificacao' entry.pk %}">Eliminar</a></div>
+                <div class="profile-entry"><strong>{{ entry }}</strong><span><a href="{% url 'profiles:section_edit' 'certificacao' entry.pk %}">Editar</a> <a href="{% url 'profiles:section_delete' 'certificacao' entry.pk %}">Eliminar</a></span></div>
             {% endfor %}
             {% for entry in request.user.profile.languages.all %}
-                <div class="profile-entry"><strong>{{ entry }}</strong><a href="{% url 'profiles:section_delete' 'idioma' entry.pk %}">Eliminar</a></div>
+                <div class="profile-entry"><strong>{{ entry }}</strong><span><a href="{% url 'profiles:section_edit' 'idioma' entry.pk %}">Editar</a> <a href="{% url 'profiles:section_delete' 'idioma' entry.pk %}">Eliminar</a></span></div>
             {% endfor %}
         </section>
+        <a class="btn btn-outline-brand" href="{% url 'profiles:preview' %}">Pré-visualizar perfil</a>
         {% if request.user.profile.status == "approved" %}
             <article class="dashboard-card dashboard-card-stack">
                 <div><span class="step-number">Publicado</span><h2>O teu perfil está disponível</h2><p>Qualquer alteração enviada volta a exigir aprovação administrativa.</p></div>
