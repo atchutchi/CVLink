@@ -15,7 +15,7 @@ class UserManagerTests(TestCase):
             password="uma-palavra-passe-segura",
         )
 
-        self.assertEqual(user.email, "Pessoa@example.com")
+        self.assertEqual(user.email, "pessoa@example.com")
         self.assertTrue(user.check_password("uma-palavra-passe-segura"))
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)

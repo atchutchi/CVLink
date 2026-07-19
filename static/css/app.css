@@ -1140,6 +1140,22 @@ h3 {
     text-decoration: none;
 }
 
+.verification-banner {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 22px;
+    border: 1px solid #f4b15c;
+    border-radius: 16px;
+    background: #fff8ed;
+}
+
+.verification-banner p {
+    margin: 4px 0 0;
+}
+
 .form-page,
 .private-page {
     min-height: 70vh;

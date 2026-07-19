@@ -5,6 +5,12 @@
 {% block content %}
 <section class="dashboard-section">
     <div class="container dashboard-grid">
+        {% if not request.user.email_verified_at %}
+            <div class="verification-banner" role="status">
+                <div><strong>Confirma o teu email</strong><p>Precisamos desta confirmação antes da submissão do perfil e do envio de contactos.</p></div>
+                <form method="post" action="{% url 'accounts:resend-verification' %}">{% csrf_token %}<button class="btn btn-outline-brand" type="submit">Reenviar ligação</button></form>
+            </div>
+        {% endif %}
         <div>
             <span class="eyebrow">Área pessoal</span>
             <h1>Olá{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}.</h1>
@@ -41,6 +47,8 @@
             <a href="{% url 'interactions:favorites' %}">Favoritos</a>
             <a href="{% url 'interactions:contacts' %}">Contactos</a>
             <a href="{% url 'interactions:notifications' %}">Notificações</a>
+            <a href="{% url 'accounts:edit' %}">Dados da conta</a>
+            <a href="{% url 'accounts:password_change' %}">Alterar palavra-passe</a>
         </nav>
         <section class="dashboard-card dashboard-card-stack profile-sections" aria-labelledby="percurso-title">
             <div class="section-row">

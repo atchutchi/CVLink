@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from interactions.models import ContactRequest, Favorite, Notification, ProfileLike, Report
 from profiles.models import Profile
@@ -12,6 +13,8 @@ class InteractionViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.user = user_model.objects.create_user(email="user@example.com", password="test-pass")
+        self.user.email_verified_at = timezone.now()
+        self.user.save(update_fields=("email_verified_at",))
         self.owner = user_model.objects.create_user(email="owner@example.com", password="test-pass")
         self.profile = self.owner.profile
         self.profile.public_name = "Profissional Público"
@@ -50,6 +53,18 @@ class InteractionViewTests(TestCase):
         self.assertTrue(ContactRequest.objects.filter(sender=self.user, profile=self.profile).exists())
         self.assertTrue(Notification.objects.filter(user=self.owner, type="new_contact").exists())
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_unverified_sender_cannot_contact(self):
+        self.user.email_verified_at = None
+        self.user.save(update_fields=("email_verified_at",))
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:contact", args=(self.profile.slug,)),
+            {"subject": "Proposta", "message": "Mensagem profissional suficientemente clara."},
+        )
+        self.assertContains(response, "Confirma o teu email")
+        self.assertFalse(ContactRequest.objects.exists())
 
     def test_contact_rate_limit_blocks_fourth_message_in_one_hour(self):
         self.client.force_login(self.user)

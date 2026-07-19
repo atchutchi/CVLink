@@ -53,7 +53,9 @@ def submit_profile(request):
         request.POST.get(name) == "on"
         for name in ("consent_profile_public", "consent_contact", "accept_terms", "accept_privacy")
     )
-    if not profile.can_submit:
+    if not request.user.email_verified_at:
+        messages.error(request, "Confirma o teu email antes de submeter o perfil.")
+    elif not profile.can_submit:
         messages.error(request, "Completa todas as secções obrigatórias antes de submeter.")
     elif not required_consents:
         messages.error(request, "Aceita os consentimentos obrigatórios antes de submeter.")
@@ -67,6 +69,21 @@ def submit_profile(request):
         profile.accepted_privacy_version = "1.0"
         profile.accepted_privacy_at = now
         profile.save()
+        from interactions.models import Notification
+
+        staff_ids = request.user.__class__.objects.filter(is_staff=True, is_active=True).values_list("id", flat=True)
+        Notification.objects.bulk_create(
+            [
+                Notification(
+                    user_id=user_id,
+                    type="profile_submitted",
+                    title="Novo perfil para revisão",
+                    body=f"{profile} submeteu o perfil.",
+                    link="/administracao/perfis/?status=pending",
+                )
+                for user_id in staff_ids
+            ]
+        )
         messages.success(request, "Perfil submetido para revisão.")
     return redirect("accounts:dashboard")
 

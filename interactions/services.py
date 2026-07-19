@@ -39,6 +39,8 @@ def toggle_like(user, profile):
 @transaction.atomic
 def create_contact(sender, profile, subject, message, remote_address=""):
     ensure_external_profile_action(sender, profile)
+    if not sender.email_verified_at:
+        raise ValidationError("Confirma o teu email antes de enviares contactos.")
     if not profile.consent_contact or profile.contact_visibility == Profile.ContactVisibility.HIDDEN:
         raise ValidationError("Este profissional não está a aceitar contactos.")
     since = timezone.now() - timedelta(hours=1)
