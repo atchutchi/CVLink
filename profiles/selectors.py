@@ -19,7 +19,7 @@ def public_profiles(params=None):
             Q(public_name__icontains=query)
             | Q(professional_title__icontains=query)
             | Q(bio__icontains=query)
-            | Q(location__icontains=query)
+            | (Q(location_is_public=True) & Q(location__icontains=query))
             | Q(specializations__name__icontains=query)
             | Q(skills__name__icontains=query)
         )
@@ -27,7 +27,10 @@ def public_profiles(params=None):
             Q(published_snapshot__public_name__icontains=query)
             | Q(published_snapshot__professional_title__icontains=query)
             | Q(published_snapshot__bio__icontains=query)
-            | Q(published_snapshot__location__icontains=query)
+            | (
+                Q(published_snapshot__location_is_public=True)
+                & Q(published_snapshot__location__icontains=query)
+            )
         )
         queryset = queryset.filter(
             (Q(published_snapshot={}) & current_fields)
@@ -54,8 +57,11 @@ def public_profiles(params=None):
     location = str(params.get("location", "")).strip()
     if location:
         queryset = queryset.filter(
-            (Q(published_snapshot={}) & Q(location__icontains=location))
-            | Q(published_snapshot__location__icontains=location)
+            (Q(published_snapshot={}) & Q(location_is_public=True) & Q(location__icontains=location))
+            | (
+                Q(published_snapshot__location_is_public=True)
+                & Q(published_snapshot__location__icontains=location)
+            )
         )
     ordering = params.get("order")
     if ordering == "name":

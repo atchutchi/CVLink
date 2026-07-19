@@ -8,15 +8,15 @@
 {% block og_description %}Perfil profissional de {{ display.public_name }} no CVLink.{% endblock %}
 
 {% block content %}
-{% if not is_preview %}<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "{{ display.public_name|escapejs }}", "jobTitle": "{{ display.professional_title|escapejs }}", "address": {"@type": "PostalAddress", "addressLocality": "{{ display.location|escapejs }}", "addressCountry": "{{ display.country|escapejs }}"}, "url": "{{ canonical_url|escapejs }}"}</script>{% endif %}
+{% if not is_preview %}<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "{{ display.public_name|escapejs }}", "jobTitle": "{{ display.professional_title|escapejs }}"{% if display.location_is_public %}, "address": {"@type": "PostalAddress", "addressLocality": "{{ display.location|escapejs }}", "addressCountry": "{{ display.country|escapejs }}"}{% endif %}, "url": "{{ canonical_url|escapejs }}"}</script>{% endif %}
 <section class="public-profile-page">
     <div class="container public-profile-grid">
         <main class="profile-main">
             <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{% url 'search' %}">Profissionais</a><span>/</span><span>{{ display.public_name }}</span></nav>
             {% if is_preview %}<div class="preview-banner" role="status">Pré-visualização privada. Esta página não aparece na pesquisa.</div>{% endif %}
             <header class="profile-hero">
-                <div class="profile-avatar profile-avatar-large" aria-hidden="true">{{ display.public_name|slice:":1"|upper }}</div>
-                <div><span class="status-approved">{% if is_preview %}Pré-visualização{% else %}Perfil aprovado{% endif %}</span><h1>{{ display.public_name }}</h1><p class="profile-headline">{{ display.professional_title }}</p><p>{{ display.location }}, {{ display.country }}</p></div>
+                {% if profile.photo %}<img class="profile-photo" src="{% url 'profile-photo' profile.slug %}" alt="Fotografia de {{ display.public_name }}">{% else %}<div class="profile-avatar profile-avatar-large" aria-hidden="true">{{ display.public_name|slice:":1"|upper }}</div>{% endif %}
+                <div><span class="status-approved">{% if is_preview %}Pré-visualização{% else %}Perfil aprovado{% endif %}</span><h1>{{ display.public_name }}</h1><p class="profile-headline">{{ display.professional_title }}</p>{% if display.location_is_public and display.location %}<p>{{ display.location }}{% if display.country %}, {{ display.country }}{% endif %}</p>{% endif %}</div>
             </header>
             <section class="profile-content-card"><h2>Sobre</h2><p>{{ display.bio|linebreaksbr }}</p></section>
             <section class="profile-content-card"><h2>Competências</h2><div class="skill-tags">{% for skill in display.skills %}<span>{{ skill }}</span>{% endfor %}</div></section>
@@ -28,6 +28,9 @@
         <aside class="profile-sidebar">
             <h2>Disponibilidade</h2><p>{{ display.availability_label }}</p><p>{{ display.work_preference_label }}</p>
             <p><strong>{{ like_count }}</strong> gosto{{ like_count|pluralize }}</p>
+            {% if profile.cv_file %}
+                {% if request.user == profile.user or profile.cv_visibility == "public" or profile.cv_visibility == "members" and request.user.is_authenticated %}<a class="btn btn-outline-brand w-100" href="{% url 'profile-cv' profile.slug %}">Descarregar currículo</a>{% endif %}
+            {% endif %}
             {% if request.user == profile.user %}
                 <a class="btn btn-brand w-100" href="{% url 'profiles:edit' %}">Editar o meu perfil</a>
             {% elif request.user.is_authenticated %}

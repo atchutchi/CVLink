@@ -1,4 +1,7 @@
+from mimetypes import guess_type
+
 from django.core.paginator import Paginator
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
@@ -43,3 +46,51 @@ def public_profile(request, slug):
         context["is_favorite"] = profile.favorite_set.filter(user=request.user).exists()
         context["is_liked"] = profile.profilelike_set.filter(user=request.user).exists()
     return render(request, "profiles/public_detail.html", context)
+
+
+def profile_photo(request, slug):
+    profile = get_object_or_404(Profile.objects.select_related("user"), slug=slug)
+    is_owner = request.user.is_authenticated and request.user == profile.user
+    is_public = profile.is_public and profile.status in {
+        Profile.Status.APPROVED,
+        Profile.Status.CHANGES_PENDING,
+    }
+    if not is_owner and not is_public:
+        raise Http404
+    if not profile.photo:
+        raise Http404
+    response = FileResponse(
+        profile.photo.open("rb"),
+        content_type=guess_type(profile.photo.name)[0] or "image/jpeg",
+    )
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
+
+
+def profile_cv(request, slug):
+    profile = get_object_or_404(Profile.objects.select_related("user"), slug=slug)
+    is_owner = request.user.is_authenticated and request.user == profile.user
+    is_public = profile.is_public and profile.status in {
+        Profile.Status.APPROVED,
+        Profile.Status.CHANGES_PENDING,
+    }
+    if not is_owner and not is_public:
+        raise Http404
+    can_access = (
+        is_owner
+        or profile.cv_visibility == Profile.CVVisibility.PUBLIC
+        or (
+            profile.cv_visibility == Profile.CVVisibility.MEMBERS
+            and request.user.is_authenticated
+        )
+    )
+    if not profile.cv_file or not can_access:
+        raise Http404
+    response = FileResponse(
+        profile.cv_file.open("rb"),
+        as_attachment=True,
+        filename=f"curriculo-{profile.slug}.pdf",
+        content_type="application/pdf",
+    )
+    response["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response

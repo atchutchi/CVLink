@@ -21,7 +21,7 @@
             <input id="search-query" name="q" type="search" value="{{ request.GET.q }}" placeholder="Ex.: Programador Django em Bissau">
             <button class="btn btn-brand" type="submit">Pesquisar</button>
         </form>
-        <p class="search-note">A pesquisa completa será ativada quando existirem perfis aprovados.</p>
+        <p class="search-note">Os resultados apresentam apenas perfis revistos e aprovados.</p>
 
         <div class="hero-actions">
             <a class="btn btn-brand btn-lg" href="{% url 'accounts:signup' %}">Criar o meu perfil</a>

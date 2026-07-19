@@ -34,6 +34,12 @@ class Profile(models.Model):
         PUBLIC = "public", "Público"
         HIDDEN = "hidden", "Oculto"
 
+    class CVVisibility(models.TextChoices):
+        PUBLIC = "public", "Público"
+        MEMBERS = "members", "Utilizadores registados"
+        REQUEST = "request", "Apenas mediante pedido"
+        PRIVATE = "private", "Privado"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name="utilizador",
@@ -45,6 +51,7 @@ class Profile(models.Model):
     professional_title = models.CharField("título profissional", max_length=180, blank=True)
     bio = models.TextField("biografia", blank=True)
     location = models.CharField("localização", max_length=160, blank=True)
+    location_is_public = models.BooleanField("mostrar localização", default=True)
     country = models.CharField("país", max_length=100, default="Guiné-Bissau")
     phone = models.CharField("telefone", max_length=40, blank=True)
     whatsapp = models.CharField("WhatsApp", max_length=40, blank=True)
@@ -72,6 +79,12 @@ class Profile(models.Model):
     photo = models.ImageField("fotografia", upload_to="profile_photos/%Y/%m/", blank=True)
     cv_file = models.FileField("currículo em PDF", upload_to="resumes/%Y/%m/", blank=True)
     cv_uploaded_at = models.DateTimeField("currículo atualizado em", null=True, blank=True)
+    cv_visibility = models.CharField(
+        "visibilidade do currículo",
+        max_length=20,
+        choices=CVVisibility.choices,
+        default=CVVisibility.PRIVATE,
+    )
     status = models.CharField(
         "estado",
         max_length=24,
@@ -158,6 +171,7 @@ class Profile(models.Model):
             "professional_title": self.professional_title,
             "bio": self.bio,
             "location": self.location,
+            "location_is_public": self.location_is_public,
             "country": self.country,
             "availability": self.availability,
             "availability_label": self.get_availability_display(),
@@ -207,6 +221,8 @@ class Profile(models.Model):
 
     @property
     def public_location(self):
+        if not self.public_payload.get("location_is_public", True):
+            return ""
         return self.public_payload.get("location", self.location)
 
     @property

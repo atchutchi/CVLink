@@ -1,5 +1,8 @@
+import tempfile
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.core.files.base import ContentFile
+from django.test import TestCase, override_settings
 
 from profiles.models import Profile
 from taxonomy.models import Area, Sector, Skill, Specialization
@@ -62,6 +65,34 @@ class PublicSearchTests(TestCase):
         )
 
         self.assertContains(response, "Maria Sambu")
+
+    def test_private_location_is_hidden_and_not_searchable(self):
+        self.public_profile.location_is_public = False
+        self.public_profile.save()
+
+        detail = self.client.get(f"/profissionais/{self.public_profile.slug}/")
+        search = self.client.get("/pesquisar/", {"location": "Bissau"})
+
+        self.assertNotContains(detail, "Bissau")
+        self.assertNotContains(search, "Maria Sambu")
+
+    def test_cv_download_respects_visibility_and_disables_indexing(self):
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            self.public_profile.cv_file.save("curriculo.pdf", ContentFile(b"%PDF-1.4\nteste"))
+            self.public_profile.cv_visibility = Profile.CVVisibility.PRIVATE
+            self.public_profile.save()
+            url = f"/profissionais/{self.public_profile.slug}/curriculo/"
+
+            self.assertEqual(self.client.get(url).status_code, 404)
+            self.public_profile.cv_visibility = Profile.CVVisibility.MEMBERS
+            self.public_profile.save()
+            self.assertEqual(self.client.get(url).status_code, 404)
+            member = get_user_model().objects.create_user(email="member@example.com", password="test-pass")
+            self.client.force_login(member)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response["X-Robots-Tag"], "noindex, nofollow, noarchive")
+            response.close()
 
     def test_public_profile_hides_private_contacts(self):
         response = self.client.get(f"/profissionais/{self.public_profile.slug}/")

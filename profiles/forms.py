@@ -6,6 +6,10 @@ from .models import Certification, Education, Experience, Profile, ProfileLangua
 
 
 class ProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["cv_visibility"].required = False
+
     class Meta:
         model = Profile
         fields = (
@@ -13,6 +17,7 @@ class ProfileForm(forms.ModelForm):
             "professional_title",
             "bio",
             "location",
+            "location_is_public",
             "country",
             "photo",
             "specializations",
@@ -26,6 +31,7 @@ class ProfileForm(forms.ModelForm):
             "linkedin_url",
             "contact_visibility",
             "cv_file",
+            "cv_visibility",
             "consent_marketing",
         )
         widgets = {
@@ -44,6 +50,9 @@ class ProfileForm(forms.ModelForm):
         if upload.size > 10 * 1024 * 1024:
             raise ValidationError("O currículo não pode exceder 10 MB.")
         return upload
+
+    def clean_cv_visibility(self):
+        return self.cleaned_data.get("cv_visibility") or self.instance.cv_visibility
 
 
 class DateInput(forms.DateInput):
