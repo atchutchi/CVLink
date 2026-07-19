@@ -97,5 +97,63 @@ def moderate_profile(profile, actor, action, reason=""):
         target_id=str(locked_profile.pk),
         metadata={"previous_status": previous_status, "new_status": locked_profile.status},
     )
+    from interactions.models import Notification
+
+    notification_titles = {
+        "approve": "Perfil aprovado",
+        "reject": "Perfil rejeitado",
+        "request_changes": "Correcções solicitadas",
+        "suspend": "Conta suspensa",
+        "restore": "Conta restaurada",
+    }
+    Notification.objects.create(
+        user=locked_profile.user,
+        type=f"profile_{action}",
+        title=notification_titles[action],
+        body=clean_reason,
+        link="/conta/painel/",
+    )
     return locked_profile
 
+
+@transaction.atomic
+def moderate_report(report, actor, action, note=""):
+    from interactions.models import Notification, Report
+
+    statuses = {
+        "review": (Report.Status.REVIEWING, "report.reviewing"),
+        "resolve": (Report.Status.RESOLVED, "report.resolved"),
+        "dismiss": (Report.Status.DISMISSED, "report.dismissed"),
+    }
+    try:
+        new_status, audit_action = statuses[action]
+    except KeyError as error:
+        raise ValidationError("Ação de denúncia inválida.") from error
+    clean_note = note.strip()
+    if action in {"resolve", "dismiss"} and not clean_note:
+        raise ValidationError("Indica a resolução da denúncia.")
+
+    locked_report = Report.objects.select_for_update().get(pk=report.pk)
+    locked_report.status = new_status
+    locked_report.assigned_to = actor
+    locked_report.resolution_note = clean_note
+    locked_report.resolved_at = timezone.now() if action in {"resolve", "dismiss"} else None
+    locked_report.save(
+        update_fields=("status", "assigned_to", "resolution_note", "resolved_at")
+    )
+    AuditLog.objects.create(
+        actor=actor,
+        action=audit_action,
+        target_type="report",
+        target_id=str(locked_report.pk),
+        metadata={"new_status": new_status, "profile_id": locked_report.profile_id},
+    )
+    if action in {"resolve", "dismiss"}:
+        Notification.objects.create(
+            user=locked_report.reporter,
+            type="report_resolved",
+            title="Denúncia analisada",
+            body="A equipa concluiu a análise da tua denúncia.",
+            link="",
+        )
+    return locked_report

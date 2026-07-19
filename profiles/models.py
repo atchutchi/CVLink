@@ -32,6 +32,7 @@ class Profile(models.Model):
         FORM = "form", "Apenas formulário"
         REGISTERED = "registered", "Utilizadores registados"
         PUBLIC = "public", "Público"
+        HIDDEN = "hidden", "Oculto"
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

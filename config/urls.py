@@ -9,5 +9,6 @@ urlpatterns = [
     path("conta/", include("accounts.urls")),
     path("perfil/", include("profiles.urls")),
     path("administracao/", include("moderation.urls")),
+    path("interacoes/", include("interactions.urls")),
     path("admin/", admin.site.urls),
 ]

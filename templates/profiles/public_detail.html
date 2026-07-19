@@ -17,7 +17,20 @@
             <section class="profile-content-card"><h2>Experiência</h2>{% for entry in profile.experiences.all %}<article class="timeline-entry"><h3>{{ entry.title }}</h3><strong>{{ entry.organization }}</strong><p>{{ entry.description }}</p></article>{% empty %}<p>Sem experiência publicada.</p>{% endfor %}</section>
             <section class="profile-content-card"><h2>Formação</h2>{% for entry in profile.education_entries.all %}<article class="timeline-entry"><h3>{{ entry.qualification }}</h3><strong>{{ entry.institution }}</strong><p>{{ entry.field_of_study }}</p></article>{% empty %}<p>Sem formação publicada.</p>{% endfor %}</section>
         </main>
-        <aside class="profile-sidebar"><h2>Disponibilidade</h2><p>{{ profile.get_availability_display }}</p><p>{{ profile.get_work_preference_display }}</p>{% if profile.consent_contact %}<button class="btn btn-brand w-100" type="button" disabled>Contacto protegido em breve</button>{% endif %}</aside>
+        <aside class="profile-sidebar">
+            <h2>Disponibilidade</h2><p>{{ profile.get_availability_display }}</p><p>{{ profile.get_work_preference_display }}</p>
+            <p><strong>{{ like_count }}</strong> gosto{{ like_count|pluralize }}</p>
+            {% if request.user == profile.user %}
+                <a class="btn btn-brand w-100" href="{% url 'profiles:edit' %}">Editar o meu perfil</a>
+            {% elif request.user.is_authenticated %}
+                {% if profile.consent_contact and profile.contact_visibility != "hidden" %}<a class="btn btn-brand w-100" href="{% url 'interactions:contact' profile.slug %}">Contactar</a>{% endif %}
+                <form method="post" action="{% url 'interactions:favorite-toggle' profile.slug %}">{% csrf_token %}<button class="btn btn-outline-brand w-100" type="submit">{% if is_favorite %}Remover dos favoritos{% else %}Guardar perfil{% endif %}</button></form>
+                <form method="post" action="{% url 'interactions:like-toggle' profile.slug %}">{% csrf_token %}<button class="btn btn-outline-brand w-100" type="submit">{% if is_liked %}Remover gosto{% else %}Gostar{% endif %}</button></form>
+                <a class="report-link" href="{% url 'interactions:report' profile.slug %}">Denunciar perfil</a>
+            {% else %}
+                <a class="btn btn-brand w-100" href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">Iniciar sessão para contactar</a>
+            {% endif %}
+        </aside>
     </div>
 </section>
 {% endblock %}

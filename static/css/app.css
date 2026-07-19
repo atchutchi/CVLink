@@ -1117,6 +1117,122 @@ h3 {
     }
 }
 
+.profile-sidebar form {
+    margin-top: 10px;
+}
+
+.report-link {
+    display: inline-block;
+    margin-top: 18px;
+    color: #8f1d16;
+}
+
+.private-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.private-tools a {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    text-decoration: none;
+}
+
+.form-page,
+.private-page {
+    min-height: 70vh;
+    padding: 64px 0 88px;
+    background: var(--color-surface);
+}
+
+.narrow-container {
+    max-width: 760px;
+}
+
+.form-page h1 {
+    margin: 10px 0;
+}
+
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 700;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 10px;
+}
+
+.errorlist {
+    margin: 8px 0;
+    color: #8f1d16;
+}
+
+.contact-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.message-card,
+.notification-row {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.message-card:last-child,
+.notification-row:last-child {
+    border-bottom: 0;
+}
+
+.message-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.message-actions button {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 8px;
+    background: var(--color-white);
+    color: var(--color-navy);
+}
+
+.notification-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+}
+
+.notification-unread {
+    border-left: 4px solid var(--color-orange);
+    padding-left: 14px;
+}
+
+@media (max-width: 767.98px) {
+    .contact-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .notification-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;

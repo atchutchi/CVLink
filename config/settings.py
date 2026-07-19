@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "taxonomy",
     "profiles",
     "moderation",
+    "interactions",
     "core",
 ]
 
@@ -112,6 +113,11 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:dashboard"
 LOGOUT_REDIRECT_URL = "home"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "CVLink <noreply@cvlink.local>")
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

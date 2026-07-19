@@ -30,4 +30,13 @@ def public_profile(request, slug):
         public_profiles(),
         slug=slug,
     )
-    return render(request, "profiles/public_detail.html", {"profile": profile})
+    context = {
+        "profile": profile,
+        "like_count": profile.profilelike_set.count(),
+        "is_favorite": False,
+        "is_liked": False,
+    }
+    if request.user.is_authenticated:
+        context["is_favorite"] = profile.favorite_set.filter(user=request.user).exists()
+        context["is_liked"] = profile.profilelike_set.filter(user=request.user).exists()
+    return render(request, "profiles/public_detail.html", context)

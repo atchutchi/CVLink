@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from profiles.models import Profile
 
 from .models import AuditLog
-from .services import ACTION_CONFIG, moderate_profile
+from .services import ACTION_CONFIG, moderate_profile, moderate_report
 
 
 def staff_required(view):
@@ -85,3 +85,39 @@ def audit_list(request):
         events = events.filter(action__icontains=action)
     return render(request, "moderation/audit_list.html", {"events": events[:200], "action": action})
 
+
+@staff_required
+def report_list(request):
+    from interactions.models import Report
+
+    selected_status = request.GET.get("status", Report.Status.OPEN)
+    reports = Report.objects.select_related("reporter", "profile", "profile__user", "assigned_to")
+    valid_statuses = {value for value, _label in Report.Status.choices}
+    if selected_status in valid_statuses:
+        reports = reports.filter(status=selected_status)
+    else:
+        selected_status = ""
+    return render(
+        request,
+        "moderation/report_list.html",
+        {"reports": reports, "selected_status": selected_status, "status_choices": Report.Status.choices},
+    )
+
+
+@staff_required
+def report_review(request, pk):
+    from interactions.models import Report
+
+    report = get_object_or_404(
+        Report.objects.select_related("reporter", "profile", "profile__user", "assigned_to"), pk=pk
+    )
+    error = ""
+    if request.method == "POST":
+        try:
+            moderate_report(report, request.user, request.POST.get("action", ""), request.POST.get("note", ""))
+        except ValidationError as exception:
+            error = exception.messages[0]
+        else:
+            messages.success(request, "Denúncia actualizada.")
+            return redirect("moderation:report-list")
+    return render(request, "moderation/report_review.html", {"report": report, "error": error})

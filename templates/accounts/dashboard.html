@@ -37,6 +37,11 @@
             </div>
             <a class="btn btn-brand" href="{% url 'profiles:edit' %}">Editar perfil</a>
         </article>
+        <nav class="dashboard-card private-tools" aria-label="Ferramentas privadas">
+            <a href="{% url 'interactions:favorites' %}">Favoritos</a>
+            <a href="{% url 'interactions:contacts' %}">Contactos</a>
+            <a href="{% url 'interactions:notifications' %}">Notificações</a>
+        </nav>
         <section class="dashboard-card dashboard-card-stack profile-sections" aria-labelledby="percurso-title">
             <div class="section-row">
                 <div>

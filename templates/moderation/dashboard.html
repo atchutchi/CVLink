@@ -37,6 +37,7 @@
         </section>
 
         <nav class="admin-shortcuts" aria-label="Ferramentas administrativas">
+            <a href="{% url 'moderation:report-list' %}">Analisar denúncias</a>
             <a href="{% url 'admin:accounts_user_changelist' %}">Gerir utilizadores</a>
             <a href="{% url 'admin:taxonomy_sector_changelist' %}">Gerir taxonomia</a>
             {% if request.user.is_superuser %}<a href="{% url 'moderation:audit-list' %}">Consultar auditoria</a>{% endif %}
@@ -44,4 +45,3 @@
     </div>
 </main>
 {% endblock %}
-
