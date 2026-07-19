@@ -32,4 +32,30 @@ Para PostgreSQL, define `DATABASE_ENGINE=postgresql` e preenche as variáveis `D
 
 ## Estrutura inicial
 
-`core` contém as páginas públicas comuns. `accounts` ficará responsável pelas contas. `profiles` guardará perfis profissionais. `taxonomy` organizará setores, áreas, especializações e competências.
+`core` contém as páginas públicas comuns. `accounts` gere a conta personalizada e a autenticação por email. `profiles` guarda os perfis profissionais privados. `taxonomy` organiza setores, áreas, especializações e competências.
+
+## Funcionalidades disponíveis
+
+1. Página inicial responsiva com identidade CVLink.
+2. Criação de conta e autenticação por email.
+3. Painel protegido do utilizador.
+4. Perfil privado criado automaticamente em estado de rascunho.
+5. Taxonomia extensível gerida através do Django Admin.
+6. Configuração para SQLite e PostgreSQL.
+7. Testes automáticos e validação contínua no GitHub.
+
+## Limites da fundação
+
+A pesquisa apresentada na página inicial é visual. Os resultados, edição completa do perfil, currículo, submissão para aprovação, contacto e favoritos serão introduzidos nas fases seguintes.
+
+## Administração
+
+Cria uma conta administrativa e inicia sessão em `http://127.0.0.1:8000/admin/`.
+
+```powershell
+.\.venv\Scripts\python.exe manage.py createsuperuser
+```
+
+## Segurança de produção
+
+Quando `DEBUG=False`, a variável `SECRET_KEY` é obrigatória. A aplicação ativa redirecionamento HTTPS, cookies seguros e HSTS. Define `ALLOWED_HOSTS` antes do arranque.

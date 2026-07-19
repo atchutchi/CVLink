@@ -1,11 +1,24 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "development-only-secret-key")
 DEBUG = os.getenv("DEBUG", "True").lower() in {"1", "true", "yes"}
+
+
+def get_secret_key(debug):
+    configured_key = os.getenv("SECRET_KEY")
+    if configured_key:
+        return configured_key
+    if debug:
+        return "development-only-secret-key"
+    raise ImproperlyConfigured("SECRET_KEY é obrigatória quando DEBUG=False.")
+
+
+SECRET_KEY = get_secret_key(DEBUG)
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
@@ -98,3 +111,12 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:dashboard"
 LOGOUT_REDIRECT_URL = "home"
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31_536_000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
