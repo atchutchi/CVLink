@@ -86,6 +86,22 @@ class ShortlistServiceTests(TestCase):
 
         self.assertNotIn("Etiqueta privada", csv_text)
 
+    def test_build_shortlist_csv_prefetches_owned_tags_for_multiple_favorites(self):
+        self.profile.published_snapshot = {"public_name": self.profile.public_name}
+        self.profile.save(update_fields=("published_snapshot", "updated_at"))
+        owner = get_user_model().objects.create_user(email="segundo-profissional@example.com", password="test-pass")
+        second_profile = owner.profile
+        second_profile.status = Profile.Status.APPROVED
+        second_profile.is_public = True
+        second_profile.published_snapshot = {"public_name": "Segundo profissional"}
+        second_profile.save()
+        second_favorite = Favorite.objects.create(user=self.user, profile=second_profile)
+        self.favorite.tags.add(RecruitmentTag.objects.create(user=self.user, name="Primeira"))
+        second_favorite.tags.add(RecruitmentTag.objects.create(user=self.user, name="Segunda"))
+
+        with self.assertNumQueries(2):
+            build_shortlist_csv(self.user, Favorite.objects.filter(user=self.user))
+
     def test_get_comparable_favorites_limits_and_orders_unique_numeric_ids(self):
         profiles = []
         for index in range(5):

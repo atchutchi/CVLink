@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import Case, IntegerField, When
+from django.db.models import Case, IntegerField, Prefetch, When
 from django.urls import reverse
 from django.utils import timezone
 
@@ -104,7 +104,9 @@ def build_shortlist_csv(user, favorites) -> str:
         user=user,
         profile__status=Profile.Status.APPROVED,
         profile__is_public=True,
-    ).select_related("profile").prefetch_related("tags"):
+    ).select_related("profile").prefetch_related(
+        Prefetch("tags", queryset=RecruitmentTag.objects.filter(user=user), to_attr="owned_tags")
+    ):
         profile = favorite.profile
         payload = profile.public_payload
         writer.writerow(
@@ -119,7 +121,7 @@ def build_shortlist_csv(user, favorites) -> str:
                 "Competencias": _csv_safe(", ".join(profile.public_skill_names)),
                 "Idiomas": _csv_safe(", ".join(language.get("name", "") for language in payload.get("languages", []))),
                 "Estado": _csv_safe(favorite.get_status_display()),
-                "Etiquetas": _csv_safe(", ".join(tag.name for tag in favorite.tags.filter(user=user))),
+                "Etiquetas": _csv_safe(", ".join(tag.name for tag in favorite.owned_tags)),
                 "Notas": _csv_safe(favorite.notes),
                 "URL do perfil": _csv_safe(reverse("public-profile", args=(profile.slug,))),
             }
