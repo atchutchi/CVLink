@@ -54,11 +54,15 @@ class SeoAndOperationsTests(TestCase):
     def test_home_page_presents_product_and_search(self):
         response = self.client.get("/")
 
-        self.assertContains(response, "Liga talento a oportunidades.")
+        self.assertContains(response, "Quadros cabo-verdianos")
+        self.assertContains(response, "PALOP")
+        self.assertContains(response, "África lusófona")
         self.assertContains(response, 'name="q"')
         self.assertContains(response, "/conta/criar/")
         self.assertContains(response, "/conta/entrar/")
         self.assertContains(response, "cvlink-logo.png")
+        self.assertNotContains(response, "Europa")
+        self.assertNotContains(response, "europeu")
 
     def test_home_page_declares_brand_favicon(self):
         response = self.client.get("/")

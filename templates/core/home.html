@@ -1,32 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}CVLink | Encontra profissionais{% endblock %}
+{% block title %}CVLink | Quadros cabo-verdianos e talento PALOP{% endblock %}
+{% block meta_description %}Pesquisa quadros cabo-verdianos e profissionais PALOP verificados para projectos, consultorias e equipas no continente africano.{% endblock %}
 {% block robots %}index,follow{% endblock %}
-{% block og_title %}CVLink, encontra profissionais na Guiné-Bissau{% endblock %}
-{% block og_description %}Pesquisa talento por área, competência, localização e disponibilidade.{% endblock %}
+{% block og_title %}CVLink, quadros cabo-verdianos e talento PALOP{% endblock %}
+{% block og_description %}Pesquisa talento por área, competência, localização, disponibilidade e experiência na África lusófona.{% endblock %}
 
 {% block content %}
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"CVLink","url":"{{ canonical_url|escapejs }}","potentialAction":{"@type":"SearchAction","target":"{{ canonical_url|escapejs }}pesquisar/?q={search_term_string}","query-input":"required name=search_term_string"}}</script>
-<section class="hero-section">
-    <div class="container hero-content">
-        <span class="eyebrow">Talento local. Oportunidades sem fronteiras.</span>
-        <h1>Liga talento a oportunidades.</h1>
-        <p class="hero-lead">Encontra profissionais por área, experiência e competência. Cria um perfil claro para mostrares o teu percurso.</p>
 
-        <form class="search-shell" method="get" action="{% url 'search' %}" role="search">
-            <label class="visually-hidden" for="search-query">Pesquisar profissionais</label>
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none">
-                <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <input id="search-query" name="q" type="search" value="{{ request.GET.q }}" placeholder="Ex.: Programador Django em Bissau">
-            <button class="btn btn-brand" type="submit">Pesquisar</button>
-        </form>
-        <p class="search-note">Os resultados apresentam apenas perfis revistos e aprovados.</p>
+<section class="hero-section hero-palop">
+    <div class="container hero-layout">
+        <div class="hero-copy">
+            <span class="eyebrow">Cabo Verde primeiro. PALOP a seguir.</span>
+            <h1>Quadros cabo-verdianos para projectos no continente africano.</h1>
+            <p class="hero-lead">O CVLink liga profissionais verificados da África lusófona a consultorias, empresas e equipas que precisam de talento qualificado.</p>
 
-        <div class="hero-actions">
-            <a class="btn btn-brand btn-lg" href="{% url 'accounts:signup' %}">Criar o meu perfil</a>
-            <a class="btn btn-link-brand" href="#como-funciona">Saber como funciona <span aria-hidden="true">↓</span></a>
+            <form class="search-shell search-shell-pro" method="get" action="{% url 'search' %}" role="search">
+                <label class="visually-hidden" for="search-query">Pesquisar profissionais</label>
+                <input id="search-query" name="q" type="search" value="{{ request.GET.q }}" placeholder="Pesquisar por profissão, competência ou área">
+                <button class="btn btn-brand" type="submit">Pesquisar</button>
+            </form>
+
+            <div class="quick-filters" aria-label="Pesquisas rápidas">
+                <a href="{% url 'search' %}?q=engenheiro">Engenharia</a>
+                <a href="{% url 'search' %}?q=gestão">Gestão</a>
+                <a href="{% url 'search' %}?q=comunicação">Comunicação</a>
+                <a href="{% url 'search' %}?q=tecnologia">Tecnologia</a>
+            </div>
+
+            <div class="hero-actions">
+                <a class="btn btn-brand btn-lg" href="{% url 'accounts:signup' %}">Criar perfil</a>
+                <a class="btn btn-outline-brand btn-lg" href="{% url 'search' %}">Encontrar talentos</a>
+            </div>
         </div>
+
+        <aside class="hero-recruiter-panel" aria-label="Resumo da plataforma">
+            <div class="hero-panel-card hero-panel-card-accent">
+                <span>Mercado foco</span>
+                <strong>Cabo Verde</strong>
+                <p>Base preparada para Angola, Moçambique, Guiné-Bissau, São Tomé e Príncipe.</p>
+            </div>
+            <div class="hero-panel-grid">
+                <div><strong>PALOP</strong><span>África lusófona</span></div>
+                <div><strong>100%</strong><span>Perfis revistos</span></div>
+                <div><strong>CSV</strong><span>Shortlist segura</span></div>
+                <div><strong>Privado</strong><span>Contactos protegidos</span></div>
+            </div>
+        </aside>
+    </div>
+</section>
+
+<section class="trust-strip" aria-label="Confiança CVLink">
+    <div class="container trust-grid">
+        <div><strong>Perfis verificados</strong><span>Revisão antes da publicação</span></div>
+        <div><strong>Dados protegidos</strong><span>Contacto privado por defeito</span></div>
+        <div><strong>Shortlist</strong><span>Notas e etiquetas privadas</span></div>
+        <div><strong>Futuro preparado</strong><span>Vagas e planos em preparação</span></div>
     </div>
 </section>
 
@@ -34,46 +64,59 @@
     <div class="container">
         <div class="section-heading">
             <span class="eyebrow">Como funciona</span>
-            <h2>Um percurso claro para encontrares e mostrares talento</h2>
-            <p class="section-lead">Se és profissional, crias uma presença credível. Se procuras talento, encontras perfis revistos e contactas sem expor dados pessoais.</p>
+            <h2>Um fluxo simples para encontrar quadros qualificados</h2>
+            <p class="section-lead">A plataforma começa pelos profissionais. Vagas e cobranças ficam preparadas, mas bloqueadas até decidires abrir esse produto.</p>
         </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <article class="feature-card h-100">
-                    <span class="step-number">01</span>
-                    <h3>Cria o teu perfil</h3>
-                    <p>Conta a tua história profissional num só lugar, com experiência, formação, competências e disponibilidade.</p>
-                    <a class="card-link" href="{% url 'accounts:signup' %}">Começar perfil <span aria-hidden="true">→</span></a>
-                </article>
-            </div>
-            <div class="col-md-4">
-                <article class="feature-card h-100">
-                    <span class="step-number">02</span>
-                    <h3>Ganha confiança</h3>
-                    <p>A nossa equipa revê cada perfil antes da publicação. Só aparecem resultados aprovados e actualizados.</p>
-                    <a class="card-link" href="{% url 'area-list' %}">Explorar áreas <span aria-hidden="true">→</span></a>
-                </article>
-            </div>
-            <div class="col-md-4">
-                <article class="feature-card h-100">
-                    <span class="step-number">03</span>
-                    <h3>Cria ligações</h3>
-                    <p>Organizações encontram o teu percurso e enviam uma mensagem protegida. O teu email permanece privado.</p>
-                    <a class="card-link" href="{% url 'search' %}">Ver profissionais <span aria-hidden="true">→</span></a>
-                </article>
-            </div>
+        <div class="process-grid">
+            <article class="feature-card">
+                <span class="step-number">01</span>
+                <h3>Profissionais criam perfil</h3>
+                <p>O perfil organiza experiência, formação, competências, idiomas e currículo num formato claro para recrutamento.</p>
+                <a class="card-link" href="{% url 'accounts:signup' %}">Começar perfil</a>
+            </article>
+            <article class="feature-card">
+                <span class="step-number">02</span>
+                <h3>Equipa valida qualidade</h3>
+                <p>O CVLink publica apenas perfis revistos, com protecção de contactos e localização quando o profissional escolher.</p>
+                <a class="card-link" href="{% url 'area-list' %}">Explorar áreas</a>
+            </article>
+            <article class="feature-card">
+                <span class="step-number">03</span>
+                <h3>Recrutadores organizam talento</h3>
+                <p>Pesquisa, shortlist, notas privadas, comparação e exportação ajudam a preparar equipas para projectos reais.</p>
+                <a class="card-link" href="{% url 'search' %}">Pesquisar talentos</a>
+            </article>
         </div>
     </div>
 </section>
 
-<section id="areas" class="section-block section-muted">
-    <div class="container area-callout">
+<section class="section-block section-muted">
+    <div class="container market-layout">
         <div>
-            <span class="eyebrow">Para todas as profissões</span>
-            <h2>Competências académicas, técnicas e profissionais</h2>
-            <p>Tecnologia, administração, saúde, educação, agricultura, comunicação e muitas outras áreas terão espaço no CVLink.</p>
+            <span class="eyebrow">PALOP</span>
+            <h2>Construído para a realidade africana lusófona</h2>
+            <p>Cabo Verde é o foco inicial. A estrutura fica pronta para abrir gradualmente outros países africanos de língua portuguesa, sem mudar o núcleo da plataforma.</p>
         </div>
-        <a class="btn btn-outline-brand btn-lg" href="{% url 'accounts:signup' %}">Juntar-me ao CVLink</a>
+        <div class="country-grid" aria-label="Países PALOP">
+            <span>Cabo Verde</span>
+            <span>Angola</span>
+            <span>Moçambique</span>
+            <span>Guiné-Bissau</span>
+            <span>São Tomé e Príncipe</span>
+        </div>
+    </div>
+</section>
+
+<section class="section-block future-section">
+    <div class="container future-grid">
+        <div>
+            <span class="eyebrow">Preparado, mas bloqueado</span>
+            <h2>Vagas e cobranças ficam na estrutura, não no lançamento</h2>
+            <p>O repositório fica pronto para evoluir para empresas, vagas, planos e relatórios. Por agora, a experiência pública mantém foco em talentos, perfis e recrutamento manual.</p>
+        </div>
+        <div class="future-card"><strong>Vagas</strong><span>Em preparação</span></div>
+        <div class="future-card"><strong>Planos</strong><span>Em preparação</span></div>
+        <div class="future-card"><strong>Cobranças</strong><span>Bloqueado</span></div>
     </div>
 </section>
 {% endblock %}

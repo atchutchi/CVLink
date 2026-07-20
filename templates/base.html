@@ -4,13 +4,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="{% block meta_description %}CVLink liga profissionais a empresas e oportunidades.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}CVLink liga quadros cabo-verdianos e talentos dos PALOP a consultorias, empresas e projectos no continente africano.{% endblock %}">
     <meta name="robots" content="{% block robots %}noindex,nofollow{% endblock %}">
     {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
     <meta property="og:site_name" content="CVLink">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:title" content="{% block og_title %}CVLink, talento ligado a oportunidades{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Encontra profissionais e oportunidades através do CVLink.{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}CVLink, quadros cabo-verdianos e talento PALOP{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Encontra profissionais verificados para projectos, consultorias e equipas na África lusófona.{% endblock %}">
     {% if canonical_url %}<meta property="og:url" content="{{ canonical_url }}">{% endif %}
     <title>{% block title %}CVLink{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'img/cvlink-logo.png' %}">
@@ -27,7 +27,10 @@
             </a>
             <div class="nav-discovery">
                 <a class="nav-link-custom" href="{% url 'home' %}#como-funciona">Como funciona</a>
+                <a class="nav-link-custom" href="{% url 'search' %}">Talentos</a>
                 <a class="nav-link-custom" href="{% url 'area-list' %}">Áreas</a>
+                <span class="nav-link-custom nav-link-muted" title="Em preparação">Vagas</span>
+                <span class="nav-link-custom nav-link-muted" title="Em preparação">Planos</span>
             </div>
             <div class="nav-actions">
                 {% if request.user.is_staff %}<a class="nav-link-custom" href="{% url 'moderation:dashboard' %}">Administração</a>{% endif %}
@@ -59,7 +62,7 @@
 
     <footer class="site-footer">
         <div class="container footer-content">
-            <p class="mb-0">© {% now "Y" %} CVLink. Liga talento a oportunidades.</p>
+            <p class="mb-0">© {% now "Y" %} CVLink. Quadros cabo-verdianos e talento PALOP ligados a oportunidades.</p>
             <nav aria-label="Navegação do rodapé">
                 <a href="{% url 'home' %}#como-funciona">Como funciona</a>
                 <a href="{% url 'area-list' %}">Áreas</a>
