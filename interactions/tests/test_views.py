@@ -152,6 +152,23 @@ class InteractionViewTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_new_recruitment_routes_redirect_anonymous_users_to_login(self):
+        favorite = Favorite.objects.create(user=self.user, profile=self.profile)
+        saved_search = SavedSearch.objects.create(user=self.user, name="Engenharia", query_params={"q": "engenheiro"})
+        urls = (
+            reverse("interactions:favorites"),
+            reverse("interactions:favorite-update", args=(favorite.pk,)),
+            reverse("interactions:saved-search-create"),
+            reverse("interactions:saved-search-run", args=(saved_search.pk,)),
+            reverse("interactions:saved-search-delete", args=(saved_search.pk,)),
+            reverse("interactions:compare"),
+            reverse("interactions:shortlist-export"),
+        )
+
+        for url in urls:
+            response = self.client.get(url)
+            self.assertRedirects(response, f"{reverse('accounts:login')}?next={url}")
+
     def test_saved_search_create_cleans_params_and_redirects_to_search(self):
         self.client.force_login(self.user)
 
@@ -174,6 +191,23 @@ class InteractionViewTests(TestCase):
         response = self.client.get(reverse("interactions:saved-search-run", args=(saved.pk,)))
 
         self.assertRedirects(response, reverse("search") + "?q=engenheiro&experience=5")
+
+    def test_saved_search_run_returns_404_for_another_users_search(self):
+        saved = SavedSearch.objects.create(user=self.other_user, name="Privada", query_params={"q": "privada"})
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:saved-search-run", args=(saved.pk,)))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_saved_search_delete_returns_404_for_another_users_search(self):
+        saved = SavedSearch.objects.create(user=self.other_user, name="Privada", query_params={"q": "privada"})
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("interactions:saved-search-delete", args=(saved.pk,)))
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(SavedSearch.objects.filter(pk=saved.pk).exists())
 
     def test_compare_shows_only_public_profile_data(self):
         self.profile.phone = "+351 912 345 678"
@@ -199,6 +233,20 @@ class InteractionViewTests(TestCase):
         self.assertNotContains(response, "Quebo")
         self.assertNotContains(response, "Guiné-Bissau")
 
+    def test_compare_ignores_profiles_outside_users_shortlist(self):
+        other_owner = get_user_model().objects.create_user(email="outro-perfil@example.com", password="test-pass")
+        other_profile = other_owner.profile
+        other_profile.public_name = "Perfil de outra shortlist"
+        other_profile.status = Profile.Status.APPROVED
+        other_profile.is_public = True
+        other_profile.save()
+        Favorite.objects.create(user=self.other_user, profile=other_profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:compare"), {"profiles": str(other_profile.pk)})
+
+        self.assertNotContains(response, other_profile.public_display_name)
+
     def test_shortlist_export_excludes_private_email(self):
         Favorite.objects.create(user=self.user, profile=self.profile)
         self.client.force_login(self.user)
@@ -207,3 +255,18 @@ class InteractionViewTests(TestCase):
 
         self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
         self.assertNotContains(response, self.profile.user.email)
+
+    def test_shortlist_export_excludes_another_users_favorite(self):
+        other_owner = get_user_model().objects.create_user(email="exportar-outro@example.com", password="test-pass")
+        other_profile = other_owner.profile
+        other_profile.public_name = "Perfil privado de outra shortlist"
+        other_profile.status = Profile.Status.APPROVED
+        other_profile.is_public = True
+        other_profile.save()
+        Favorite.objects.create(user=self.other_user, profile=other_profile, notes="Nota privada")
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:shortlist-export"))
+
+        self.assertNotContains(response, other_profile.public_display_name)
+        self.assertNotContains(response, "Nota privada")
