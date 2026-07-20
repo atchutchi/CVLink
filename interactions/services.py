@@ -1,3 +1,6 @@
+import csv
+from io import StringIO
+from collections.abc import Mapping
 from datetime import timedelta
 from hashlib import sha256
 
@@ -5,12 +8,123 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import transaction
+from django.db.models import Case, IntegerField, When
 from django.urls import reverse
 from django.utils import timezone
 
 from profiles.models import Profile
 
-from .models import ContactRequest, Favorite, Notification, ProfileLike, Report
+from .models import ContactRequest, Favorite, Notification, ProfileLike, RecruitmentTag, Report, SavedSearch
+
+
+SHORTLIST_CSV_HEADERS = [
+    "Nome publico",
+    "Titulo profissional",
+    "Sector",
+    "Area",
+    "Pais publico",
+    "Modalidade",
+    "Disponibilidade",
+    "Competencias",
+    "Idiomas",
+    "Estado",
+    "Etiquetas",
+    "Notas",
+    "URL do perfil",
+]
+
+
+def clean_saved_search_params(params: Mapping[str, str]) -> dict[str, str]:
+    return {
+        key: value.strip()
+        for key, value in params.items()
+        if key in SavedSearch.allowed_query_params() and isinstance(value, str) and value.strip()
+    }
+
+
+@transaction.atomic
+def sync_favorite_tags(favorite: Favorite, raw_tags: str) -> list[RecruitmentTag]:
+    tags = []
+    seen_names = set()
+    for raw_name in raw_tags.split(","):
+        name = " ".join(raw_name.split())
+        normalized_name = RecruitmentTag.objects.normalise_name(name)
+        if not name or normalized_name in seen_names:
+            continue
+        tag, _created = RecruitmentTag.objects.get_or_create(
+            user=favorite.user,
+            normalized_name=normalized_name,
+            defaults={"name": name},
+        )
+        tags.append(tag)
+        seen_names.add(normalized_name)
+    favorite.tags.set(tags)
+    return tags
+
+
+def get_comparable_favorites(user, profile_ids: list[int]):
+    unique_ids = []
+    for profile_id in profile_ids:
+        if isinstance(profile_id, bool):
+            continue
+        try:
+            numeric_id = int(profile_id)
+        except (TypeError, ValueError):
+            continue
+        if numeric_id > 0 and numeric_id not in unique_ids:
+            unique_ids.append(numeric_id)
+        if len(unique_ids) == 4:
+            break
+    ordering = Case(
+        *[When(profile_id=profile_id, then=position) for position, profile_id in enumerate(unique_ids)],
+        output_field=IntegerField(),
+    )
+    return (
+        Favorite.objects.filter(
+            user=user,
+            profile_id__in=unique_ids,
+            profile__status=Profile.Status.APPROVED,
+            profile__is_public=True,
+        )
+        .select_related("profile")
+        .order_by(ordering)
+    )
+
+
+def _csv_safe(value) -> str:
+    value = str(value or "")
+    return f"'{value}" if value.startswith(("=", "+", "-", "@")) else value
+
+
+def build_shortlist_csv(user, favorites) -> str:
+    output = StringIO()
+    writer = csv.DictWriter(output, fieldnames=SHORTLIST_CSV_HEADERS)
+    writer.writeheader()
+    for favorite in favorites.filter(
+        user=user,
+        profile__status=Profile.Status.APPROVED,
+        profile__is_public=True,
+    ).select_related("profile").prefetch_related("tags"):
+        profile = favorite.profile
+        payload = profile.public_payload
+        writer.writerow(
+            {
+                "Nome publico": _csv_safe(profile.public_display_name),
+                "Titulo profissional": _csv_safe(profile.public_professional_title),
+                "Sector": _csv_safe(", ".join(payload.get("sectors", []))),
+                "Area": _csv_safe(", ".join(payload.get("areas", []))),
+                "Pais publico": _csv_safe(profile.public_country),
+                "Modalidade": _csv_safe(payload.get("work_preference_label", profile.get_work_preference_display())),
+                "Disponibilidade": _csv_safe(payload.get("availability_label", profile.get_availability_display())),
+                "Competencias": _csv_safe(", ".join(profile.public_skill_names)),
+                "Idiomas": _csv_safe(", ".join(language.get("name", "") for language in payload.get("languages", []))),
+                "Estado": _csv_safe(favorite.get_status_display()),
+                "Etiquetas": _csv_safe(", ".join(tag.name for tag in favorite.tags.all())),
+                "Notas": _csv_safe(favorite.notes),
+                "URL do perfil": _csv_safe(reverse("public-profile", args=(profile.slug,))),
+            }
+        )
+    return f"\ufeff{output.getvalue()}"
 
 
 def ensure_external_profile_action(user, profile):
