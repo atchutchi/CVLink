@@ -221,6 +221,18 @@ class InteractionViewTests(TestCase):
         self.assertRedirects(response, reverse("accounts:dashboard"))
         self.assertFalse(SavedSearch.objects.filter(pk=saved.pk).exists())
 
+    def test_saved_search_delete_rejects_external_next_url(self):
+        saved = SavedSearch.objects.create(user=self.user, name="Engenharia", query_params={"q": "engenheiro"})
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:saved-search-delete", args=(saved.pk,)),
+            {"next": "https://example.com/destino-externo"},
+        )
+
+        self.assertRedirects(response, reverse("interactions:favorites"))
+        self.assertFalse(SavedSearch.objects.filter(pk=saved.pk).exists())
+
     def test_compare_shows_only_public_profile_data(self):
         self.profile.phone = "+351 912 345 678"
         self.profile.save(update_fields=("phone",))
