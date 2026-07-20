@@ -4,7 +4,15 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from interactions.models import ContactRequest, Favorite, Notification, ProfileLike, Report, SavedSearch
+from interactions.models import (
+    ContactRequest,
+    Favorite,
+    Notification,
+    ProfileLike,
+    RecruitmentTag,
+    Report,
+    SavedSearch,
+)
 from profiles.models import Education, Experience, Profile, ProfileLanguage
 
 
@@ -142,6 +150,45 @@ class InteractionViewTests(TestCase):
         self.assertEqual(favorite.notes, "Boa entrevista")
         self.assertEqual(set(favorite.tags.values_list("name", flat=True)), {"civil", "senior"})
 
+    def test_favorite_update_rejects_an_individual_tag_longer_than_eighty_characters_without_partial_update(self):
+        favorite = Favorite.objects.create(
+            user=self.user,
+            profile=self.profile,
+            status=Favorite.Status.SAVED,
+            notes="Nota original",
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:favorite-update", args=(favorite.pk,)),
+            {"status": "interview", "notes": "Nota alterada", "tags": "a" * 81},
+            follow=True,
+        )
+
+        self.assertContains(response, "N\u00e3o foi poss\u00edvel actualizar o favorito.")
+        favorite.refresh_from_db()
+        self.assertEqual(favorite.status, Favorite.Status.SAVED)
+        self.assertEqual(favorite.notes, "Nota original")
+
+    def test_favorite_add_is_idempotent_and_preserves_existing_shortlist_metadata(self):
+        favorite = Favorite.objects.create(
+            user=self.user,
+            profile=self.profile,
+            status=Favorite.Status.INTERVIEW,
+            notes="Preparar proposta",
+        )
+        tag = RecruitmentTag.objects.create(user=self.user, name="Prioridade")
+        favorite.tags.add(tag)
+        self.client.force_login(self.user)
+
+        response = self.client.post(f"/interacoes/favoritos/{self.profile.slug}/adicionar/")
+
+        self.assertEqual(response.status_code, 302)
+        favorite.refresh_from_db()
+        self.assertEqual(favorite.status, Favorite.Status.INTERVIEW)
+        self.assertEqual(favorite.notes, "Preparar proposta")
+        self.assertEqual(list(favorite.tags.values_list("name", flat=True)), ["Prioridade"])
+
     def test_favorite_update_returns_404_for_another_users_favorite(self):
         other_favorite = Favorite.objects.create(user=self.other_user, profile=self.profile)
         self.client.force_login(self.user)
@@ -244,6 +291,17 @@ class InteractionViewTests(TestCase):
         self.assertContains(response, self.profile.public_display_name)
         self.assertNotContains(response, self.profile.phone)
 
+    def test_compare_includes_public_profile_with_changes_pending(self):
+        self.profile.status = Profile.Status.CHANGES_PENDING
+        self.profile.published_snapshot = {"public_name": "Perfil aprovado"}
+        self.profile.save(update_fields=("status", "published_snapshot"))
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:compare"), {"profiles": str(self.profile.pk)})
+
+        self.assertContains(response, "Perfil aprovado")
+
     def test_compare_hides_city_and_country_when_location_is_private(self):
         self.profile.location = "Quebo"
         self.profile.country = "Guiné-Bissau"
@@ -320,6 +378,17 @@ class InteractionViewTests(TestCase):
         self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
         self.assertNotContains(response, self.profile.user.email)
 
+    def test_shortlist_export_includes_public_profile_with_changes_pending(self):
+        self.profile.status = Profile.Status.CHANGES_PENDING
+        self.profile.published_snapshot = {"public_name": "Perfil aprovado"}
+        self.profile.save(update_fields=("status", "published_snapshot"))
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:shortlist-export"))
+
+        self.assertContains(response, "Perfil aprovado")
+
     def test_shortlist_export_excludes_another_users_favorite(self):
         other_owner = get_user_model().objects.create_user(email="exportar-outro@example.com", password="test-pass")
         other_profile = other_owner.profile
@@ -344,6 +413,46 @@ class InteractionViewTests(TestCase):
         self.assertContains(response, "Estado do processo")
         self.assertContains(response, "Exportar CSV")
         self.assertContains(response, "Comparar seleccionados")
+
+    def test_favorites_page_includes_public_profile_with_changes_pending(self):
+        self.profile.status = Profile.Status.CHANGES_PENDING
+        self.profile.published_snapshot = {"public_name": "Perfil aprovado"}
+        self.profile.save(update_fields=("status", "published_snapshot"))
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:favorites"))
+
+        self.assertContains(response, "Perfil aprovado")
+
+    def test_favorites_page_hides_tag_owned_by_another_recruiter(self):
+        favorite = Favorite.objects.create(user=self.user, profile=self.profile)
+        foreign_tag = RecruitmentTag.objects.create(user=self.other_user, name="Etiqueta alheia")
+        favorite.tags.add(foreign_tag)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:favorites"))
+
+        self.assertNotContains(response, "Etiqueta alheia")
+
+    def test_shortlist_export_link_encodes_reserved_tag_and_export_keeps_filter(self):
+        favorite = Favorite.objects.create(user=self.user, profile=self.profile)
+        favorite.tags.add(RecruitmentTag.objects.create(user=self.user, name="R&D"))
+        other_owner = get_user_model().objects.create_user(email="sem-etiqueta@example.com", password="test-pass")
+        other_profile = other_owner.profile
+        other_profile.public_name = "Perfil sem etiqueta"
+        other_profile.status = Profile.Status.APPROVED
+        other_profile.is_public = True
+        other_profile.save()
+        Favorite.objects.create(user=self.user, profile=other_profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:favorites"), {"tag": "R&D"})
+
+        self.assertContains(response, "?tag=R%26D")
+        export_response = self.client.get(reverse("interactions:shortlist-export"), {"tag": "R&D"})
+        self.assertContains(export_response, self.profile.public_display_name)
+        self.assertNotContains(export_response, other_profile.public_display_name)
 
     def test_authenticated_search_shows_saved_search_and_shortlist_actions(self):
         self.profile.professional_title = "Engenheiro civil"

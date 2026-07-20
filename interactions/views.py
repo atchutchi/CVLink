@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -9,12 +11,14 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from urllib.parse import urlencode
 
+from profiles.models import Profile
 from profiles.selectors import public_profiles
 
 from .forms import ContactRequestForm, FavoriteUpdateForm, ReportForm, SavedSearchForm
-from .models import ContactRequest, Favorite, Notification, SavedSearch
+from .models import ContactRequest, Favorite, Notification, RecruitmentTag, SavedSearch
 from .services import (
     build_shortlist_csv,
+    add_favorite,
     clean_saved_search_params,
     create_contact,
     create_report,
@@ -35,6 +39,15 @@ def favorite_toggle(request, slug):
     profile = get_public_profile(slug)
     added = toggle_favorite(request.user, profile)
     messages.success(request, "Perfil guardado." if added else "Perfil removido dos favoritos.")
+    return redirect("public-profile", slug=profile.slug)
+
+
+@login_required
+@require_POST
+def favorite_add(request, slug):
+    profile = get_public_profile(slug)
+    _favorite, created = add_favorite(request.user, profile)
+    messages.success(request, "Perfil guardado." if created else "Perfil já está na shortlist.")
     return redirect("public-profile", slug=profile.slug)
 
 
@@ -92,9 +105,11 @@ def report(request, slug):
 def favorites(request):
     items = Favorite.objects.filter(
         user=request.user,
-        profile__status="approved",
+        profile__status__in=(Profile.Status.APPROVED, Profile.Status.CHANGES_PENDING),
         profile__is_public=True,
-    ).select_related("profile", "profile__user").prefetch_related("tags")
+    ).select_related("profile", "profile__user").prefetch_related(
+        Prefetch("tags", queryset=RecruitmentTag.objects.filter(user=request.user), to_attr="owned_tags")
+    )
     active_status = request.GET.get("status", "")
     active_tag = request.GET.get("tag", "")
     if active_status in Favorite.Status.values:
@@ -112,6 +127,9 @@ def favorites(request):
             "tags": request.user.recruitment_tags.all(),
             "active_status": active_status,
             "active_tag": active_tag,
+            "export_query": urlencode(
+                {key: value for key, value in {"status": active_status, "tag": active_tag}.items() if value}
+            ),
             "saved_searches": request.user.saved_searches.all(),
         },
     )
@@ -119,6 +137,7 @@ def favorites(request):
 
 @login_required
 @require_POST
+@transaction.atomic
 def favorite_update(request, pk):
     favorite = get_object_or_404(Favorite, pk=pk, user=request.user)
     form = FavoriteUpdateForm(request.POST, instance=favorite)

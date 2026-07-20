@@ -11,7 +11,7 @@
             <label>Estado do processo<select name="status"><option value="">Todos</option>{% for value, label in status_choices %}<option value="{{ value }}"{% if active_status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
             <label>Etiqueta<select name="tag"><option value="">Todas</option>{% for tag in tags %}<option value="{{ tag.name }}"{% if active_tag == tag.name %} selected{% endif %}>{{ tag.name }}</option>{% endfor %}</select></label>
             <button class="btn btn-outline-brand" type="submit">Filtrar</button>
-            <a class="btn btn-outline-brand" href="{% url 'interactions:shortlist-export' %}?status={{ active_status }}&tag={{ active_tag }}">Exportar CSV</a>
+            <a class="btn btn-outline-brand" href="{% url 'interactions:shortlist-export' %}{% if export_query %}?{{ export_query }}{% endif %}">Exportar CSV</a>
         </form>
         <form id="compare-form" class="shortlist-actions" method="get" action="{% url 'interactions:compare' %}"><button class="btn btn-brand" type="submit">Comparar seleccionados</button></form>
             {% for item in favorites %}
@@ -19,7 +19,7 @@
                     <label class="compare-select"><input form="compare-form" type="checkbox" name="profiles" value="{{ item.profile.pk }}"> Comparar</label>
                     <div><h2><a href="{% url 'public-profile' item.profile.slug %}">{{ item.profile.public_display_name }}</a></h2><p>{{ item.profile.public_professional_title }}</p></div>
                     <form method="post" action="{% url 'interactions:favorite-update' item.pk %}">{% csrf_token %}
-                        <div class="shortlist-actions"><label>Estado<select class="recruitment-status" name="status">{% for value, label in status_choices %}<option value="{{ value }}"{% if item.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><label>Etiquetas<input class="private-tag" name="tags" value="{% for tag in item.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="Ex.: sénior, urgente"></label></div>
+                        <div class="shortlist-actions"><label>Estado<select class="recruitment-status" name="status">{% for value, label in status_choices %}<option value="{{ value }}"{% if item.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><label>Etiquetas<input class="private-tag" name="tags" value="{% for tag in item.owned_tags %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="Ex.: sénior, urgente"></label></div>
                         <label>Notas<textarea name="notes" rows="3" placeholder="Notas privadas para o processo">{{ item.notes }}</textarea></label>
                         <div class="shortlist-actions"><button class="btn btn-brand" type="submit">Actualizar</button></div>
                     </form>

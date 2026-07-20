@@ -83,7 +83,7 @@ def get_comparable_favorites(user, profile_ids: list[int]):
         Favorite.objects.filter(
             user=user,
             profile_id__in=unique_ids,
-            profile__status=Profile.Status.APPROVED,
+            profile__status__in=(Profile.Status.APPROVED, Profile.Status.CHANGES_PENDING),
             profile__is_public=True,
         )
         .select_related("profile")
@@ -102,7 +102,7 @@ def build_shortlist_csv(user, favorites) -> str:
     writer.writeheader()
     for favorite in favorites.filter(
         user=user,
-        profile__status=Profile.Status.APPROVED,
+        profile__status__in=(Profile.Status.APPROVED, Profile.Status.CHANGES_PENDING),
         profile__is_public=True,
     ).select_related("profile").prefetch_related(
         Prefetch("tags", queryset=RecruitmentTag.objects.filter(user=user), to_attr="owned_tags")
@@ -146,6 +146,11 @@ def toggle_relation(model, user, profile):
 
 def toggle_favorite(user, profile):
     return toggle_relation(Favorite, user, profile)
+
+
+def add_favorite(user, profile):
+    ensure_external_profile_action(user, profile)
+    return Favorite.objects.get_or_create(user=user, profile=profile)
 
 
 def toggle_like(user, profile):

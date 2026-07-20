@@ -5,6 +5,7 @@ from .views import (
     contact_action,
     contacts,
     compare,
+    favorite_add,
     favorite_toggle,
     favorite_update,
     favorites,
@@ -24,6 +25,7 @@ app_name = "interactions"
 urlpatterns = [
     path("favoritos/", favorites, name="favorites"),
     path("favoritos/<int:pk>/actualizar/", favorite_update, name="favorite-update"),
+    path("favoritos/<slug:slug>/adicionar/", favorite_add, name="favorite-add"),
     path("favoritos/<slug:slug>/alternar/", favorite_toggle, name="favorite-toggle"),
     path("pesquisas/guardar/", saved_search_create, name="saved-search-create"),
     path("pesquisas/<int:pk>/executar/", saved_search_run, name="saved-search-run"),
