@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -94,6 +95,9 @@ class SavedSearch(models.Model):
         return set(cls.QUERY_PARAMS)
 
     def clean(self):
+        if not isinstance(self.query_params, dict):
+            raise ValidationError({"query_params": "Os parâmetros da pesquisa têm de ser um objeto JSON."})
+
         self.query_params = {
             key: value
             for key, value in self.query_params.items()

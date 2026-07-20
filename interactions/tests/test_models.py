@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
@@ -88,3 +89,9 @@ class InteractionModelTests(TestCase):
                 "order",
             },
         )
+
+    def test_saved_search_rejects_non_object_query_parameters(self):
+        saved = SavedSearch(user=self.user, name="Pesquisa inválida", query_params=["q"])
+
+        with self.assertRaises(ValidationError):
+            saved.full_clean()
