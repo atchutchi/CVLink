@@ -52,7 +52,7 @@
         </nav>
         <section class="dashboard-card saved-search-list" aria-labelledby="saved-searches-title">
             <div><span class="step-number">Recrutamento</span><h2 id="saved-searches-title">Pesquisas guardadas</h2></div>
-            {% for search in recent_saved_searches %}<div class="profile-entry"><strong>{{ search.name }}</strong><div><a href="{% url 'interactions:saved-search-run' search.pk %}">Executar</a> <form class="inline-form" method="post" action="{% url 'interactions:saved-search-delete' search.pk %}">{% csrf_token %}<button type="submit">Eliminar</button></form></div></div>{% empty %}<p>Não tens pesquisas guardadas.</p>{% endfor %}
+            {% for search in recent_saved_searches %}<div class="profile-entry"><strong>{{ search.name }}</strong><div><a href="{% url 'interactions:saved-search-run' search.pk %}">Executar</a> <form class="inline-form" method="post" action="{% url 'interactions:saved-search-delete' search.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'accounts:dashboard' %}"><button type="submit">Eliminar</button></form></div></div>{% empty %}<p>Não tens pesquisas guardadas.</p>{% endfor %}
             <a class="btn btn-outline-brand" href="{% url 'interactions:favorites' %}">Abrir shortlist</a>
         </section>
         <section class="dashboard-card dashboard-card-stack profile-sections" aria-labelledby="percurso-title">

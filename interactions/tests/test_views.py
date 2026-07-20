@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from interactions.models import ContactRequest, Favorite, Notification, ProfileLike, Report, SavedSearch
-from profiles.models import Experience, Profile
+from profiles.models import Education, Experience, Profile, ProfileLanguage
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -209,6 +209,18 @@ class InteractionViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertTrue(SavedSearch.objects.filter(pk=saved.pk).exists())
 
+    def test_saved_search_delete_returns_to_dashboard_when_requested(self):
+        saved = SavedSearch.objects.create(user=self.user, name="Engenharia", query_params={"q": "engenheiro"})
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:saved-search-delete", args=(saved.pk,)),
+            {"next": reverse("accounts:dashboard")},
+        )
+
+        self.assertRedirects(response, reverse("accounts:dashboard"))
+        self.assertFalse(SavedSearch.objects.filter(pk=saved.pk).exists())
+
     def test_compare_shows_only_public_profile_data(self):
         self.profile.phone = "+351 912 345 678"
         self.profile.save(update_fields=("phone",))
@@ -232,6 +244,46 @@ class InteractionViewTests(TestCase):
 
         self.assertNotContains(response, "Quebo")
         self.assertNotContains(response, "Guiné-Bissau")
+
+    def test_compare_uses_published_snapshot_for_recruitment_details(self):
+        self.profile.published_snapshot = {
+            "public_name": "Profissional Público",
+            "professional_title": "Engenheiro",
+            "location_is_public": True,
+            "location": "Bissau",
+            "country": "Guiné-Bissau",
+            "work_preference_label": "Remoto aprovado",
+            "availability_label": "Disponível aprovado",
+            "skills": [],
+            "education": [{"qualification": "Licenciatura aprovada", "institution": "Universidade aprovada"}],
+            "languages": [{"name": "Português aprovado", "level": "Fluente"}],
+        }
+        self.profile.work_preference = Profile.WorkPreference.ONSITE
+        self.profile.availability = Profile.Availability.UNAVAILABLE
+        self.profile.save(update_fields=("published_snapshot", "work_preference", "availability"))
+        Education.objects.create(
+            profile=self.profile,
+            qualification="Formação pendente",
+            institution="Instituição pendente",
+        )
+        ProfileLanguage.objects.create(
+            profile=self.profile,
+            name="Idioma pendente",
+            level=ProfileLanguage.Level.BASIC,
+        )
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:compare"), {"profiles": str(self.profile.pk)})
+
+        self.assertContains(response, "Remoto aprovado")
+        self.assertContains(response, "Disponível aprovado")
+        self.assertContains(response, "Licenciatura aprovada")
+        self.assertContains(response, "Português aprovado")
+        self.assertNotContains(response, "Presencial")
+        self.assertNotContains(response, "Indisponível")
+        self.assertNotContains(response, "Formação pendente")
+        self.assertNotContains(response, "Idioma pendente")
 
     def test_compare_ignores_profiles_outside_users_shortlist(self):
         other_owner = get_user_model().objects.create_user(email="outro-perfil@example.com", password="test-pass")

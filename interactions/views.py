@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from urllib.parse import urlencode
 
@@ -155,6 +156,13 @@ def saved_search_delete(request, pk):
     saved_search = get_object_or_404(SavedSearch, pk=pk, user=request.user)
     saved_search.delete()
     messages.success(request, "Pesquisa apagada.")
+    next_url = request.POST.get("next", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
     return redirect("interactions:favorites")
 
 
