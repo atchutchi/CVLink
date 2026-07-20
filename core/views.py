@@ -4,12 +4,18 @@ from django.db.utils import OperationalError
 from django.shortcuts import render
 from django.urls import reverse
 
+from .features import active_features, locked_features
+
 
 def home(request):
     return render(
         request,
         "core/home.html",
-        {"canonical_url": request.build_absolute_uri(reverse("home"))},
+        {
+            "canonical_url": request.build_absolute_uri(reverse("home")),
+            "active_features": active_features(),
+            "locked_features": locked_features(),
+        },
     )
 
 

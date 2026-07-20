@@ -114,9 +114,13 @@
             <h2>Vagas e cobranças ficam na estrutura, não no lançamento</h2>
             <p>O repositório fica pronto para evoluir para empresas, vagas, planos e relatórios. Por agora, a experiência pública mantém foco em talentos, perfis e recrutamento manual.</p>
         </div>
-        <div class="future-card"><strong>Vagas</strong><span>Em preparação</span></div>
-        <div class="future-card"><strong>Planos</strong><span>Em preparação</span></div>
-        <div class="future-card"><strong>Cobranças</strong><span>Bloqueado</span></div>
+        {% for feature in locked_features %}
+            <div class="future-card">
+                <strong>{{ feature.name }}</strong>
+                <p>{{ feature.description }}</p>
+                <span>Bloqueado</span>
+            </div>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}

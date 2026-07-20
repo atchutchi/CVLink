@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from profiles.models import Profile
 from taxonomy.models import Area, Sector
 
+from .features import FEATURES, active_features, locked_features
+
 
 class HomeViewTests(TestCase):
     def test_home_page_is_available(self):
@@ -63,6 +65,19 @@ class SeoAndOperationsTests(TestCase):
         self.assertContains(response, "cvlink-logo.png")
         self.assertNotContains(response, "Europa")
         self.assertNotContains(response, "europeu")
+
+    def test_future_features_are_structured_but_locked(self):
+        self.assertEqual([feature.key for feature in active_features()], ["talent_repository"])
+        self.assertIn("jobs", FEATURES)
+        self.assertIn("teams", FEATURES)
+        self.assertIn("billing", FEATURES)
+        self.assertTrue(all(not feature.public_enabled for feature in locked_features()))
+
+        response = self.client.get("/")
+        self.assertContains(response, "Vagas")
+        self.assertContains(response, "Equipas de recrutamento")
+        self.assertContains(response, "Planos e cobranças")
+        self.assertContains(response, "Bloqueado")
 
     def test_home_page_declares_brand_favicon(self):
         response = self.client.get("/")

@@ -3,11 +3,21 @@
 {% block title %}Iniciar sessão | CVLink{% endblock %}
 
 {% block content %}
-<section class="auth-section">
-    <div class="auth-card">
+<section class="auth-section auth-split">
+    <div class="auth-brand-panel">
+        <span class="eyebrow">Acesso seguro</span>
+        <h1>Entrar no CVLink</h1>
+        <p>Pesquisa talentos, acompanha a tua shortlist ou gere o teu perfil profissional com privacidade.</p>
+        <div class="auth-proof-grid">
+            <div><strong>PALOP</strong><span>Foco africano lusófono</span></div>
+            <div><strong>Verificado</strong><span>Perfis revistos</span></div>
+            <div><strong>Privado</strong><span>Dados protegidos</span></div>
+        </div>
+    </div>
+    <div class="auth-card auth-card-pro">
         <span class="eyebrow">Bem-vindo de volta</span>
-        <h1>Iniciar sessão</h1>
-        <p>Acede ao teu perfil profissional e acompanha o respetivo estado.</p>
+        <h2>Iniciar sessão</h2>
+        <p>Acede à tua conta para continuar.</p>
         <form method="post" novalidate>
             {% csrf_token %}
             {% for field in form %}
@@ -18,10 +28,10 @@
                 </div>
             {% endfor %}
             {% for error in form.non_field_errors %}<div class="form-error mb-3">{{ error }}</div>{% endfor %}
-            <button class="btn btn-brand w-100" type="submit">Entrar</button>
+            <button class="btn btn-brand w-100" type="submit">Iniciar sessão</button>
         </form>
         <p class="auth-switch"><a href="{% url 'accounts:password_reset' %}">Esqueci-me da palavra-passe</a></p>
-        <p class="auth-switch">Ainda não tens conta? <a href="{% url 'accounts:signup' %}">Cria uma agora</a>.</p>
+        <p class="auth-switch">Ainda não tens conta? <a href="{% url 'accounts:signup' %}">Criar conta</a>.</p>
     </div>
 </section>
 {% endblock %}
