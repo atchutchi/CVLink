@@ -1,5 +1,7 @@
 <article class="result-card talent-card">
-    <div class="profile-avatar" aria-hidden="true">{{ profile.public_display_name|slice:":1"|upper }}</div>
+    <div class="profile-avatar profile-avatar-portrait" aria-hidden="true">
+        <span>{{ profile.public_display_name|slice:":1"|upper }}</span>
+    </div>
     <div class="result-card-body">
         <div class="talent-card-header">
             <div>
