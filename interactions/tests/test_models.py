@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 
-from interactions.models import Favorite, Notification, ProfileLike, Report
+from interactions.models import Favorite, Notification, ProfileLike, RecruitmentTag, Report, SavedSearch
 from profiles.models import Profile
 
 
@@ -35,3 +35,56 @@ class InteractionModelTests(TestCase):
         notification = Notification.objects.create(user=self.user, type="test", title="Teste")
         self.assertIsNone(notification.read_at)
 
+    def test_recruitment_tag_normalises_name_when_created(self):
+        tag = RecruitmentTag.objects.create(user=self.user, name="  Engenharia Civil  ")
+
+        self.assertEqual(tag.name, "Engenharia Civil")
+        self.assertEqual(tag.normalized_name, "engenharia civil")
+
+    def test_recruitment_tag_manager_normalises_whitespace_and_case(self):
+        name = RecruitmentTag.objects.normalise_name("  ENGENHARIA   Civil  ")
+
+        self.assertEqual(name, "engenharia civil")
+
+    def test_favorite_can_store_recruitment_status_notes_and_tags(self):
+        tag = RecruitmentTag.objects.create(user=self.user, name="Engenharia Civil")
+        favorite = Favorite.objects.create(
+            user=self.user,
+            profile=self.profile,
+            status=Favorite.Status.TO_CONTACT,
+            notes="Boa opção",
+        )
+        favorite.tags.add(tag)
+
+        self.assertEqual(favorite.status, Favorite.Status.TO_CONTACT)
+        self.assertEqual(favorite.notes, "Boa opção")
+        self.assertEqual(favorite.tags.first(), tag)
+
+    def test_saved_search_removes_unknown_and_blank_query_parameters(self):
+        saved = SavedSearch.objects.create(
+            user=self.user,
+            name="Engenheiros",
+            query_params={"q": "engenheiro", "experience": "5", "unsafe": "x", "sector": ""},
+        )
+        saved.full_clean()
+
+        self.assertEqual(saved.query_params, {"q": "engenheiro", "experience": "5"})
+
+    def test_saved_search_exposes_only_allowed_query_parameters(self):
+        self.assertEqual(
+            SavedSearch.allowed_query_params(),
+            {
+                "q",
+                "sector",
+                "area",
+                "specialization",
+                "skill",
+                "location",
+                "country",
+                "availability",
+                "work_preference",
+                "experience",
+                "cv",
+                "order",
+            },
+        )

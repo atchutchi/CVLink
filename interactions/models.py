@@ -15,11 +15,97 @@ class UserProfileRelation(models.Model):
 
 
 class Favorite(UserProfileRelation):
+    class Status(models.TextChoices):
+        SAVED = "saved", "Guardado"
+        TO_CONTACT = "to_contact", "Para contactar"
+        CONTACTED = "contacted", "Contactado"
+        INTERVIEW = "interview", "Entrevista"
+        OFFER = "offer", "Proposta"
+        HIRED = "hired", "Contratado"
+        ARCHIVED = "archived", "Arquivado"
+
+    status = models.CharField(max_length=24, choices=Status.choices, default=Status.SAVED, db_index=True)
+    notes = models.TextField(blank=True, max_length=3000)
+    updated_at = models.DateTimeField(auto_now=True)
+    tags = models.ManyToManyField("RecruitmentTag", related_name="favorites", blank=True)
+
     class Meta:
         ordering = ("-created_at",)
         constraints = [models.UniqueConstraint(fields=("user", "profile"), name="unique_favorite")]
         verbose_name = "favorito"
         verbose_name_plural = "favoritos"
+
+
+class RecruitmentTagManager(models.Manager):
+    def normalise_name(self, name: str) -> str:
+        return " ".join(name.split()).casefold()
+
+
+class RecruitmentTag(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="recruitment_tags", on_delete=models.CASCADE)
+    name = models.CharField(max_length=80)
+    normalized_name = models.CharField(max_length=80, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = RecruitmentTagManager()
+
+    def clean(self):
+        self.name = " ".join(self.name.split())
+        self.normalized_name = type(self).objects.normalise_name(self.name)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ("name",)
+        constraints = [models.UniqueConstraint(fields=("user", "normalized_name"), name="unique_recruitment_tag")]
+        verbose_name = "etiqueta de recrutamento"
+        verbose_name_plural = "etiquetas de recrutamento"
+
+
+class SavedSearch(models.Model):
+    QUERY_PARAMS = frozenset(
+        {
+            "q",
+            "sector",
+            "area",
+            "specialization",
+            "skill",
+            "location",
+            "country",
+            "availability",
+            "work_preference",
+            "experience",
+            "cv",
+            "order",
+        }
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="saved_searches", on_delete=models.CASCADE)
+    name = models.CharField(max_length=120)
+    query_params = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def allowed_query_params(cls) -> set[str]:
+        return set(cls.QUERY_PARAMS)
+
+    def clean(self):
+        self.query_params = {
+            key: value
+            for key, value in self.query_params.items()
+            if key in self.allowed_query_params()
+            and value is not None
+            and (not isinstance(value, str) or value.strip())
+        }
+
+    class Meta:
+        ordering = ("-updated_at",)
+        verbose_name = "pesquisa guardada"
+        verbose_name_plural = "pesquisas guardadas"
 
 
 class ProfileLike(UserProfileRelation):
@@ -110,4 +196,3 @@ class Notification(models.Model):
         ordering = ("-created_at",)
         verbose_name = "notificação"
         verbose_name_plural = "notificações"
-
