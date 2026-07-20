@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Comparar favoritos</h1>
+{% for favorite in favorites %}
+  <article>
+    <h2>{{ favorite.profile.public_display_name }}</h2>
+    <p>{{ favorite.profile.public_professional_title }}</p>
+    <p>{{ favorite.profile.public_country }}</p>
+    <p>{{ favorite.get_status_display }}</p>
+  </article>
+{% empty %}
+  <p>Selecciona até quatro perfis guardados para comparar.</p>
+{% endfor %}
+{% endblock %}

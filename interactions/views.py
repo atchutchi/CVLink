@@ -1,15 +1,27 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from urllib.parse import urlencode
 
 from profiles.selectors import public_profiles
 
-from .forms import ContactRequestForm, ReportForm
-from .models import ContactRequest, Favorite, Notification
-from .services import create_contact, create_report, toggle_favorite, toggle_like
+from .forms import ContactRequestForm, FavoriteUpdateForm, ReportForm, SavedSearchForm
+from .models import ContactRequest, Favorite, Notification, SavedSearch
+from .services import (
+    build_shortlist_csv,
+    clean_saved_search_params,
+    create_contact,
+    create_report,
+    get_comparable_favorites,
+    sync_favorite_tags,
+    toggle_favorite,
+    toggle_like,
+)
 
 
 def get_public_profile(slug):
@@ -81,8 +93,95 @@ def favorites(request):
         user=request.user,
         profile__status="approved",
         profile__is_public=True,
-    ).select_related("profile", "profile__user")
-    return render(request, "interactions/favorites.html", {"favorites": items})
+    ).select_related("profile", "profile__user").prefetch_related("tags")
+    active_status = request.GET.get("status", "")
+    active_tag = request.GET.get("tag", "")
+    if active_status in Favorite.Status.values:
+        items = items.filter(status=active_status)
+    else:
+        active_status = ""
+    if active_tag:
+        items = items.filter(tags__name=active_tag, tags__user=request.user)
+    return render(
+        request,
+        "interactions/favorites.html",
+        {
+            "favorites": items,
+            "status_choices": Favorite.Status.choices,
+            "tags": request.user.recruitment_tags.all(),
+            "active_status": active_status,
+            "active_tag": active_tag,
+            "saved_searches": request.user.saved_searches.all(),
+        },
+    )
+
+
+@login_required
+@require_POST
+def favorite_update(request, pk):
+    favorite = get_object_or_404(Favorite, pk=pk, user=request.user)
+    form = FavoriteUpdateForm(request.POST, instance=favorite)
+    if form.is_valid():
+        favorite = form.save()
+        sync_favorite_tags(favorite, form.cleaned_data["tags"])
+        messages.success(request, "Favorito actualizado.")
+    else:
+        messages.error(request, "Não foi possível actualizar o favorito.")
+    return redirect("interactions:favorites")
+
+
+@login_required
+@require_POST
+def saved_search_create(request):
+    form = SavedSearchForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Não foi possível guardar a pesquisa.")
+        return redirect("interactions:favorites")
+    query_params = clean_saved_search_params(request.POST)
+    saved_search = SavedSearch(user=request.user, name=form.cleaned_data["name"], query_params=query_params)
+    try:
+        saved_search.full_clean()
+        saved_search.save()
+    except ValidationError:
+        messages.error(request, "Não foi possível guardar a pesquisa.")
+        return redirect("interactions:favorites")
+    messages.success(request, "Pesquisa guardada.")
+    return redirect(f"{reverse('search')}?{urlencode(saved_search.query_params)}")
+
+
+@login_required
+@require_POST
+def saved_search_delete(request, pk):
+    saved_search = get_object_or_404(SavedSearch, pk=pk, user=request.user)
+    saved_search.delete()
+    messages.success(request, "Pesquisa apagada.")
+    return redirect("interactions:favorites")
+
+
+@login_required
+def saved_search_run(request, pk):
+    saved_search = get_object_or_404(SavedSearch, pk=pk, user=request.user)
+    return redirect(f"{reverse('search')}?{urlencode(saved_search.query_params)}")
+
+
+@login_required
+def compare(request):
+    favorites = get_comparable_favorites(request.user, request.GET.getlist("profiles"))
+    return render(request, "interactions/compare.html", {"favorites": favorites})
+
+
+@login_required
+def shortlist_export(request):
+    favorites = Favorite.objects.filter(user=request.user)
+    active_status = request.GET.get("status", "")
+    active_tag = request.GET.get("tag", "")
+    if active_status in Favorite.Status.values:
+        favorites = favorites.filter(status=active_status)
+    if active_tag:
+        favorites = favorites.filter(tags__name=active_tag, tags__user=request.user)
+    response = HttpResponse(build_shortlist_csv(request.user, favorites), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="shortlist.csv"'
+    return response
 
 
 @login_required

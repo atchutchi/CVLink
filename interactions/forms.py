@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import ContactRequest, Report
+from .models import ContactRequest, Favorite, Report, SavedSearch
 
 
 class ContactRequestForm(forms.ModelForm):
@@ -16,3 +16,17 @@ class ReportForm(forms.ModelForm):
         fields = ("reason", "description")
         widgets = {"description": forms.Textarea(attrs={"rows": 5})}
 
+
+class FavoriteUpdateForm(forms.ModelForm):
+    tags = forms.CharField(required=False, max_length=500)
+
+    class Meta:
+        model = Favorite
+        fields = ("status", "notes")
+        widgets = {"notes": forms.Textarea(attrs={"rows": 4})}
+
+
+class SavedSearchForm(forms.ModelForm):
+    class Meta:
+        model = SavedSearch
+        fields = ("name",)

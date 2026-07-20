@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from interactions.models import ContactRequest, Favorite, Notification, ProfileLike, Report
+from interactions.models import ContactRequest, Favorite, Notification, ProfileLike, Report, SavedSearch
 from profiles.models import Profile
 
 
@@ -16,6 +16,7 @@ class InteractionViewTests(TestCase):
         self.user.email_verified_at = timezone.now()
         self.user.save(update_fields=("email_verified_at",))
         self.owner = user_model.objects.create_user(email="owner@example.com", password="test-pass")
+        self.other_user = user_model.objects.create_user(email="other@example.com", password="test-pass")
         self.profile = self.owner.profile
         self.profile.public_name = "Profissional Público"
         self.profile.status = Profile.Status.APPROVED
@@ -125,3 +126,71 @@ class InteractionViewTests(TestCase):
         self.assertRedirects(response, reverse("interactions:notifications"))
         notification.refresh_from_db()
         self.assertIsNotNone(notification.read_at)
+
+    def test_favorite_update_saves_status_notes_and_tags(self):
+        favorite = Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:favorite-update", args=(favorite.pk,)),
+            {"status": "interview", "notes": "Boa entrevista", "tags": "civil, senior"},
+        )
+
+        self.assertRedirects(response, reverse("interactions:favorites"))
+        favorite.refresh_from_db()
+        self.assertEqual(favorite.status, Favorite.Status.INTERVIEW)
+        self.assertEqual(favorite.notes, "Boa entrevista")
+        self.assertEqual(set(favorite.tags.values_list("name", flat=True)), {"civil", "senior"})
+
+    def test_favorite_update_returns_404_for_another_users_favorite(self):
+        other_favorite = Favorite.objects.create(user=self.other_user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:favorite-update", args=(other_favorite.pk,)), {"status": "interview"}
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_saved_search_create_cleans_params_and_redirects_to_search(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:saved-search-create"),
+            {"name": "Engenharia", "q": "engenheiro", "experience": "5", "unsafe": "x"},
+        )
+
+        self.assertRedirects(response, reverse("search") + "?q=engenheiro&experience=5")
+        self.assertEqual(
+            SavedSearch.objects.get(user=self.user).query_params, {"q": "engenheiro", "experience": "5"}
+        )
+
+    def test_saved_search_run_redirects_to_the_saved_query(self):
+        saved = SavedSearch.objects.create(
+            user=self.user, name="Engenharia", query_params={"q": "engenheiro", "experience": "5"}
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:saved-search-run", args=(saved.pk,)))
+
+        self.assertRedirects(response, reverse("search") + "?q=engenheiro&experience=5")
+
+    def test_compare_shows_only_public_profile_data(self):
+        self.profile.phone = "+351 912 345 678"
+        self.profile.save(update_fields=("phone",))
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:compare"), {"profiles": str(self.profile.pk)})
+
+        self.assertContains(response, self.profile.public_display_name)
+        self.assertNotContains(response, self.profile.phone)
+
+    def test_shortlist_export_excludes_private_email(self):
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:shortlist-export"))
+
+        self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
+        self.assertNotContains(response, self.profile.user.email)
