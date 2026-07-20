@@ -11,7 +11,7 @@
 {% if not is_preview %}<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "{{ display.public_name|escapejs }}", "jobTitle": "{{ display.professional_title|escapejs }}"{% if display.location_is_public %}, "address": {"@type": "PostalAddress", "addressLocality": "{{ display.location|escapejs }}", "addressCountry": "{{ display.country|escapejs }}"}{% endif %}, "url": "{{ canonical_url|escapejs }}"}</script>{% endif %}
 <section class="public-profile-page">
     <div class="container public-profile-grid">
-        <main class="profile-main">
+            <div class="profile-main">
             <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{% url 'search' %}">Profissionais</a><span>/</span><span>{{ display.public_name }}</span></nav>
             {% if is_preview %}<div class="preview-banner" role="status">Pré-visualização privada. Esta página não aparece na pesquisa.</div>{% endif %}
             <header class="profile-hero">
@@ -24,9 +24,10 @@
             <section class="profile-content-card"><h2>Formação</h2>{% for entry in display.education %}<article class="timeline-entry"><h3>{{ entry.qualification }}</h3><strong>{{ entry.institution }}</strong><p>{{ entry.field_of_study }}</p></article>{% empty %}<p>Sem formação publicada.</p>{% endfor %}</section>
             {% if display.certifications %}<section class="profile-content-card"><h2>Certificações</h2>{% for entry in display.certifications %}<article class="timeline-entry"><h3>{{ entry.name }}</h3><strong>{{ entry.issuer }}</strong></article>{% endfor %}</section>{% endif %}
             {% if display.languages %}<section class="profile-content-card"><h2>Idiomas</h2><div class="skill-tags">{% for entry in display.languages %}<span>{{ entry.name }} · {{ entry.level }}</span>{% endfor %}</div></section>{% endif %}
-        </main>
+            </div>
         <aside class="profile-sidebar">
             <h2>Disponibilidade</h2><p>{{ display.availability_label }}</p><p>{{ display.work_preference_label }}</p>
+            <p class="profile-trust-note"><strong>Perfil revisto pelo CVLink.</strong> O contacto é feito através da plataforma e o email do profissional permanece privado.</p>
             <p><strong>{{ like_count }}</strong> gosto{{ like_count|pluralize }}</p>
             {% if profile.cv_file %}
                 {% if request.user == profile.user or profile.cv_visibility == "public" or profile.cv_visibility == "members" and request.user.is_authenticated %}<a class="btn btn-outline-brand w-100" href="{% url 'profile-cv' profile.slug %}">Descarregar currículo</a>{% endif %}

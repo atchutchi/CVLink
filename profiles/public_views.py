@@ -26,6 +26,51 @@ def search(request):
         "availability_choices": Profile.Availability.choices,
         "work_preference_choices": Profile.WorkPreference.choices,
     }
+    # Expor filtros ativos como etiquetas removíveis para que o recrutador
+    # perceba rapidamente o contexto da pesquisa e possa ajustar um critério.
+    labels = {
+        "q": "Pesquisa",
+        "sector": "Setor",
+        "area": "Área",
+        "specialization": "Especialização",
+        "skill": "Competência",
+        "location": "Localização",
+        "availability": "Disponibilidade",
+        "work_preference": "Modalidade",
+        "language": "Idioma",
+        "experience": "Experiência mínima",
+        "cv": "Currículo disponível",
+    }
+    option_maps = {
+        "sector": {item.slug: item.name for item in context["sectors"]},
+        "area": {item.slug: item.name for item in context["areas"]},
+        "specialization": {item.slug: item.name for item in context["specializations"]},
+        "skill": {item.slug: item.name for item in context["skills"]},
+        "availability": dict(Profile.Availability.choices),
+        "work_preference": dict(Profile.WorkPreference.choices),
+        "experience": {
+            "1": "1 ano ou mais",
+            "3": "3 anos ou mais",
+            "5": "5 anos ou mais",
+            "10": "10 anos ou mais",
+        },
+        "cv": {"1": "Currículo disponível"},
+    }
+    active_filters = []
+    for parameter, label in labels.items():
+        value = request.GET.get(parameter, "").strip()
+        if not value:
+            continue
+        display_value = option_maps.get(parameter, {}).get(value, value)
+        cleaned = request.GET.copy()
+        cleaned.pop(parameter, None)
+        cleaned.pop("page", None)
+        active_filters.append({
+            "label": label,
+            "value": display_value,
+            "remove_url": f"?{cleaned.urlencode()}" if cleaned else reverse("search"),
+        })
+    context["active_filters"] = active_filters
     return render(request, "profiles/search.html", context)
 
 

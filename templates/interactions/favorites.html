@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Favoritos | CVLink{% endblock %}
 {% block content %}
-<main class="private-page"><div class="container"><div class="admin-heading"><div><span class="eyebrow">Lista privada</span><h1>Perfis guardados</h1></div><a href="{% url 'accounts:dashboard' %}">Voltar ao painel</a></div><div class="results-grid">{% for item in favorites %}{% include "profiles/_profile_card.html" with profile=item.profile %}{% empty %}<div class="empty-state"><h2>Ainda não guardaste perfis</h2><a class="btn btn-brand" href="{% url 'search' %}">Pesquisar profissionais</a></div>{% endfor %}</div></div></main>
+<section class="private-page" aria-labelledby="favorites-title"><div class="container"><div class="admin-heading"><div><span class="eyebrow">Lista privada</span><h1 id="favorites-title">Perfis guardados</h1></div><a href="{% url 'accounts:dashboard' %}">Voltar ao painel</a></div><div class="results-grid">{% for item in favorites %}{% include "profiles/_profile_card.html" with profile=item.profile %}{% empty %}<div class="empty-state"><h2>Ainda não guardaste perfis</h2><a class="btn btn-brand" href="{% url 'search' %}">Pesquisar profissionais</a></div>{% endfor %}</div></div></section>
 {% endblock %}

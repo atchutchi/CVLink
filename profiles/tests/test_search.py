@@ -161,3 +161,31 @@ class PublicSearchTests(TestCase):
 
         self.assertContains(response, "Maria Sambu")
         self.assertNotContains(response, "Perfil Privado")
+
+    def test_experience_filter_uses_public_dates_without_error(self):
+        self.public_profile.experiences.create(
+            title="Responsável técnico",
+            organization="CVLink",
+            description="Projetos",
+            start_date="2018-01-01",
+            end_date="2023-01-01",
+        )
+        response = self.client.get("/pesquisar/", {"experience": "3"})
+        self.assertContains(response, self.public_profile.public_name)
+
+    def test_country_filter_respects_private_location(self):
+        self.public_profile.country = "Guiné-Bissau"
+        self.public_profile.location_is_public = False
+        self.public_profile.save()
+        response = self.client.get("/pesquisar/", {"country": "Guiné"})
+        self.assertNotContains(response, self.public_profile.public_name)
+
+    def test_active_filters_are_rendered_as_removable_tags(self):
+        response = self.client.get(
+            "/pesquisar/",
+            {"q": "django", "skill": self.skill.slug, "experience": "3"},
+        )
+        self.assertContains(response, "Pesquisa: django")
+        self.assertContains(response, "Competência: Django")
+        self.assertContains(response, "Experiência mínima: 3")
+        self.assertContains(response, "Remover filtro Competência: Django")

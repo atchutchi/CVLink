@@ -3,9 +3,14 @@
     <div class="result-card-body">
         <h2><a href="{% url 'public-profile' profile.slug %}">{{ profile.public_display_name }}</a></h2>
         <p class="result-title">{{ profile.public_professional_title }}</p>
-        <p>{{ profile.public_location }}{% if profile.public_country %}, {{ profile.public_country }}{% endif %}</p>
+        {% if profile.public_location or profile.public_country %}<p class="result-location">{{ profile.public_location }}{% if profile.public_location and profile.public_country %}, {% endif %}{{ profile.public_country }}</p>{% endif %}
+        <div class="result-meta" aria-label="Sinais de confiança">
+            <span class="result-badge">{% if profile.status == "approved" %}Perfil aprovado{% else %}Perfil revisto{% endif %}</span>
+            {% if profile.cv_file and profile.cv_visibility != "private" %}<span class="result-badge result-badge-muted">CV disponível</span>{% endif %}
+        </div>
         <div class="skill-tags">
             {% for skill in profile.public_skill_names|slice:":5" %}<span>{{ skill }}</span>{% endfor %}
         </div>
+        <a class="result-card-link" href="{% url 'public-profile' profile.slug %}">Ver perfil completo <span aria-hidden="true">→</span></a>
     </div>
 </article>

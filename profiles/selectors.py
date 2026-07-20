@@ -175,7 +175,20 @@ def public_profiles(params=None):
 
     country = _param(params, "country", "pais")
     if country:
-        queryset = queryset.filter(country__icontains=country)
+        matching_ids = []
+        for profile in queryset:
+            payload = profile.published_snapshot or {}
+            if payload:
+                if not payload.get("location_is_public", True):
+                    continue
+                candidate = payload.get("country", "")
+            elif profile.location_is_public:
+                candidate = profile.country
+            else:
+                candidate = ""
+            if _normalise(country) in _normalise(candidate):
+                matching_ids.append(profile.pk)
+        queryset = queryset.filter(pk__in=matching_ids)
 
     language = _param(params, "language", "idioma")
     if language:
@@ -201,7 +214,7 @@ def public_profiles(params=None):
                 if not start:
                     continue
                 start_date = date.fromisoformat(start) if isinstance(start, str) else start
-                end_date = date_type.fromisoformat(end) if isinstance(end, str) and end else (end or date.today())
+                end_date = date.fromisoformat(end) if isinstance(end, str) and end else (end or date.today())
                 total_days += max(0, (end_date - start_date).days)
             if total_days >= threshold * 365:
                 matching_ids.append(profile.pk)

@@ -25,6 +25,8 @@
             <div><label for="location">Localização</label><input id="location" name="location" value="{{ request.GET.location }}" placeholder="Ex.: Bissau"></div>
             <div><label for="availability">Disponibilidade</label><select id="availability" name="availability"><option value="">Todas</option>{% for value,label in availability_choices %}<option value="{{ value }}" {% if request.GET.availability == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
             <div><label for="work_preference">Modalidade</label><select id="work_preference" name="work_preference"><option value="">Todas</option>{% for value,label in work_preference_choices %}<option value="{{ value }}" {% if request.GET.work_preference == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div><label for="experience">Experiência mínima</label><select id="experience" name="experience"><option value="">Qualquer experiência</option><option value="1" {% if request.GET.experience == "1" %}selected{% endif %}>1 ano ou mais</option><option value="3" {% if request.GET.experience == "3" %}selected{% endif %}>3 anos ou mais</option><option value="5" {% if request.GET.experience == "5" %}selected{% endif %}>5 anos ou mais</option><option value="10" {% if request.GET.experience == "10" %}selected{% endif %}>10 anos ou mais</option></select></div>
+            <div><label for="cv">Currículo</label><select id="cv" name="cv"><option value="">Com ou sem currículo</option><option value="1" {% if request.GET.cv == "1" %}selected{% endif %}>Currículo disponível</option></select></div>
             <div><label for="order">Ordenar</label><select id="order" name="order"><option value="recent">Mais recentes</option><option value="name" {% if request.GET.order == "name" %}selected{% endif %}>Nome</option></select></div>
             <div class="filter-actions">
                 <button class="btn btn-brand" type="submit">Mostrar resultados</button>
@@ -32,6 +34,12 @@
             </div>
         </form>
 
+        {% if active_filters %}
+        <div class="active-filters" aria-label="Filtros ativos">
+            <span class="active-filters-label">A filtrar por:</span>
+            {% for item in active_filters %}<a class="filter-tag" href="{{ item.remove_url }}" aria-label="Remover filtro {{ item.label }}: {{ item.value }}">{{ item.label }}: {{ item.value }} <span aria-hidden="true">×</span></a>{% endfor %}
+        </div>
+        {% endif %}
         <div class="results-heading"><h2>{{ page_obj.paginator.count }} {% if page_obj.paginator.count == 1 %}profissional{% else %}profissionais{% endif %}</h2></div>
         <div class="results-grid">
             {% for profile in page_obj %}{% include "profiles/_profile_card.html" %}{% empty %}<div class="empty-state"><h2>Nenhum perfil encontrado</h2><p>Altera os termos ou remove alguns filtros.</p><a class="btn btn-outline-brand" href="{% url 'search' %}">Limpar pesquisa</a></div>{% endfor %}
