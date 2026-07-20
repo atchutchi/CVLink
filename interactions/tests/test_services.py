@@ -78,6 +78,14 @@ class ShortlistServiceTests(TestCase):
         self.assertNotIn("Notas privadas de outro utilizador", csv_text)
         self.assertNotIn("Confidencial", csv_text)
 
+    def test_build_shortlist_csv_excludes_cross_user_tag_on_owned_favorite(self):
+        private_tag = RecruitmentTag.objects.create(user=self.other_user, name="Etiqueta privada")
+        self.favorite.tags.add(private_tag)
+
+        csv_text = build_shortlist_csv(self.user, Favorite.objects.filter(user=self.user))
+
+        self.assertNotIn("Etiqueta privada", csv_text)
+
     def test_get_comparable_favorites_limits_and_orders_unique_numeric_ids(self):
         profiles = []
         for index in range(5):

@@ -119,7 +119,7 @@ def build_shortlist_csv(user, favorites) -> str:
                 "Competencias": _csv_safe(", ".join(profile.public_skill_names)),
                 "Idiomas": _csv_safe(", ".join(language.get("name", "") for language in payload.get("languages", []))),
                 "Estado": _csv_safe(favorite.get_status_display()),
-                "Etiquetas": _csv_safe(", ".join(tag.name for tag in favorite.tags.all())),
+                "Etiquetas": _csv_safe(", ".join(tag.name for tag in favorite.tags.filter(user=user))),
                 "Notas": _csv_safe(favorite.notes),
                 "URL do perfil": _csv_safe(reverse("public-profile", args=(profile.slug,))),
             }
