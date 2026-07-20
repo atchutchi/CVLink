@@ -34,3 +34,13 @@ class PublicProfileIdentityTests(TestCase):
         user.profile.save()
 
         self.assertEqual(user.profile.slug, original_slug)
+
+    def test_public_country_is_hidden_when_location_is_private(self):
+        user = get_user_model().objects.create_user(
+            email="localizacao-privada@example.com", password="PalavraPasseSegura2026!"
+        )
+        user.profile.country = "Guiné-Bissau"
+        user.profile.location_is_public = False
+        user.profile.save(update_fields=("country", "location_is_public"))
+
+        self.assertEqual(user.profile.public_country, "")

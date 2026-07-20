@@ -229,6 +229,8 @@ class Profile(models.Model):
 
     @property
     def public_country(self):
+        if not self.public_payload.get("location_is_public", True):
+            return ""
         return self.public_payload.get("country", self.country)
 
     @property

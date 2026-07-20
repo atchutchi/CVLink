@@ -48,6 +48,7 @@ class ShortlistServiceTests(TestCase):
         self.profile.phone = "+245000"
         self.profile.whatsapp = "+245111"
         self.profile.location = "Rua privada"
+        self.profile.country = "Guiné-Bissau"
         self.profile.location_is_public = False
         self.profile.save()
         self.favorite.notes = "=ligar"
@@ -60,6 +61,7 @@ class ShortlistServiceTests(TestCase):
         self.assertNotIn("+245000", csv_text)
         self.assertNotIn("+245111", csv_text)
         self.assertNotIn("Rua privada", csv_text)
+        self.assertNotIn("Guiné-Bissau", csv_text)
 
     def test_build_shortlist_csv_excludes_another_users_favorite_metadata(self):
         private_tag = RecruitmentTag.objects.create(user=self.other_user, name="Confidencial")

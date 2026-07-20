@@ -186,6 +186,19 @@ class InteractionViewTests(TestCase):
         self.assertContains(response, self.profile.public_display_name)
         self.assertNotContains(response, self.profile.phone)
 
+    def test_compare_hides_city_and_country_when_location_is_private(self):
+        self.profile.location = "Quebo"
+        self.profile.country = "Guiné-Bissau"
+        self.profile.location_is_public = False
+        self.profile.save(update_fields=("location", "country", "location_is_public"))
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:compare"), {"profiles": str(self.profile.pk)})
+
+        self.assertNotContains(response, "Quebo")
+        self.assertNotContains(response, "Guiné-Bissau")
+
     def test_shortlist_export_excludes_private_email(self):
         Favorite.objects.create(user=self.user, profile=self.profile)
         self.client.force_login(self.user)
