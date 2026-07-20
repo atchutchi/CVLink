@@ -47,6 +47,12 @@ class InteractionModelTests(TestCase):
 
         self.assertEqual(name, "engenharia civil")
 
+    def test_recruitment_tag_rejects_name_that_exceeds_limit_after_casefold(self):
+        with self.assertRaises(ValidationError):
+            RecruitmentTag.objects.create(user=self.user, name="ß" * 80)
+
+        self.assertFalse(RecruitmentTag.objects.filter(user=self.user).exists())
+
     def test_favorite_can_store_recruitment_status_notes_and_tags(self):
         tag = RecruitmentTag.objects.create(user=self.user, name="Engenharia Civil")
         favorite = Favorite.objects.create(

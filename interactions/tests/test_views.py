@@ -14,6 +14,7 @@ from interactions.models import (
     SavedSearch,
 )
 from profiles.models import Education, Experience, Profile, ProfileLanguage
+from taxonomy.models import Skill
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -169,6 +170,27 @@ class InteractionViewTests(TestCase):
         favorite.refresh_from_db()
         self.assertEqual(favorite.status, Favorite.Status.SAVED)
         self.assertEqual(favorite.notes, "Nota original")
+
+    def test_favorite_update_rejects_tag_that_exceeds_limit_after_casefold_without_partial_update(self):
+        favorite = Favorite.objects.create(
+            user=self.user,
+            profile=self.profile,
+            status=Favorite.Status.SAVED,
+            notes="Nota original",
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("interactions:favorite-update", args=(favorite.pk,)),
+            {"status": "interview", "notes": "Nota alterada", "tags": "ß" * 80},
+            follow=True,
+        )
+
+        self.assertContains(response, "Não foi possível actualizar o favorito.")
+        favorite.refresh_from_db()
+        self.assertEqual(favorite.status, Favorite.Status.SAVED)
+        self.assertEqual(favorite.notes, "Nota original")
+        self.assertFalse(RecruitmentTag.objects.filter(user=self.user).exists())
 
     def test_favorite_add_is_idempotent_and_preserves_existing_shortlist_metadata(self):
         favorite = Favorite.objects.create(
@@ -354,6 +376,49 @@ class InteractionViewTests(TestCase):
         self.assertNotContains(response, "Indisponível")
         self.assertNotContains(response, "Formação pendente")
         self.assertNotContains(response, "Idioma pendente")
+
+    def test_search_shortlist_and_comparison_hide_current_values_missing_from_snapshot(self):
+        self.profile.professional_title = "Titulo actual secreto"
+        self.profile.location = "Cidade actual secreta"
+        self.profile.country = "Pais actual secreto"
+        self.profile.work_preference = Profile.WorkPreference.ONSITE
+        self.profile.availability = Profile.Availability.UNAVAILABLE
+        self.profile.published_snapshot = {"public_name": "Nome aprovado"}
+        self.profile.save()
+        self.profile.skills.add(
+            Skill.objects.create(name="Competencia actual secreta", slug="competencia-actual-secreta")
+        )
+        Education.objects.create(
+            profile=self.profile,
+            qualification="Formacao actual secreta",
+            institution="Instituicao actual secreta",
+        )
+        ProfileLanguage.objects.create(
+            profile=self.profile,
+            name="Idioma actual secreto",
+            level=ProfileLanguage.Level.BASIC,
+        )
+        Favorite.objects.create(user=self.user, profile=self.profile)
+        self.client.force_login(self.user)
+
+        search_response = self.client.get(reverse("search"))
+        search_by_secret_skill_response = self.client.get(reverse("search"), {"q": "competencia actual secreta"})
+        shortlist_response = self.client.get(reverse("interactions:favorites"))
+        comparison_response = self.client.get(reverse("interactions:compare"), {"profiles": str(self.profile.pk)})
+
+        for response in (search_response, shortlist_response, comparison_response):
+            self.assertContains(response, "Nome aprovado")
+            self.assertNotContains(response, "Titulo actual secreto")
+            self.assertNotContains(response, "Cidade actual secreta")
+            self.assertNotContains(response, "Pais actual secreto")
+        self.assertEqual(search_response.context["page_obj"].object_list[0].public_skill_names, [])
+        self.assertNotContains(search_by_secret_skill_response, "Nome aprovado")
+        self.assertNotContains(shortlist_response, "Competencia actual secreta")
+        self.assertNotContains(comparison_response, "Competencia actual secreta")
+        self.assertNotContains(comparison_response, "Presencial")
+        self.assertNotContains(comparison_response, "Indisponível")
+        self.assertNotContains(comparison_response, "Formacao actual secreta")
+        self.assertNotContains(comparison_response, "Idioma actual secreto")
 
     def test_compare_ignores_profiles_outside_users_shortlist(self):
         other_owner = get_user_model().objects.create_user(email="outro-perfil@example.com", password="test-pass")

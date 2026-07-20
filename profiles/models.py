@@ -215,27 +215,41 @@ class Profile(models.Model):
 
     @property
     def public_display_name(self):
-        return self.public_payload.get("public_name", self.public_name)
+        if self.published_snapshot:
+            return self.public_payload.get("public_name", "")
+        return self.public_name
 
     @property
     def public_professional_title(self):
-        return self.public_payload.get("professional_title", self.professional_title)
+        if self.published_snapshot:
+            return self.public_payload.get("professional_title", "")
+        return self.professional_title
 
     @property
     def public_location(self):
-        if not self.public_payload.get("location_is_public", True):
+        if self.published_snapshot:
+            if not self.public_payload.get("location_is_public", False):
+                return ""
+            return self.public_payload.get("location", "")
+        if not self.location_is_public:
             return ""
-        return self.public_payload.get("location", self.location)
+        return self.location
 
     @property
     def public_country(self):
-        if not self.public_payload.get("location_is_public", True):
+        if self.published_snapshot:
+            if not self.public_payload.get("location_is_public", False):
+                return ""
+            return self.public_payload.get("country", "")
+        if not self.location_is_public:
             return ""
-        return self.public_payload.get("country", self.country)
+        return self.country
 
     @property
     def public_skill_names(self):
-        return self.public_payload.get("skills", [])
+        if self.published_snapshot:
+            return self.public_payload.get("skills", [])
+        return list(self.skills.values_list("name", flat=True))
 
 
 class ProfileRevision(models.Model):

@@ -63,6 +63,24 @@ class ShortlistServiceTests(TestCase):
         self.assertNotIn("Rua privada", csv_text)
         self.assertNotIn("Guiné-Bissau", csv_text)
 
+    def test_build_shortlist_csv_hides_current_values_missing_from_published_snapshot(self):
+        self.profile.professional_title = "Titulo actual secreto"
+        self.profile.location = "Cidade actual secreta"
+        self.profile.country = "Pais actual secreto"
+        self.profile.work_preference = Profile.WorkPreference.ONSITE
+        self.profile.availability = Profile.Availability.UNAVAILABLE
+        self.profile.published_snapshot = {"public_name": "Nome aprovado"}
+        self.profile.save()
+
+        csv_text = build_shortlist_csv(self.user, Favorite.objects.filter(user=self.user))
+
+        self.assertIn("Nome aprovado", csv_text)
+        self.assertNotIn("Titulo actual secreto", csv_text)
+        self.assertNotIn("Cidade actual secreta", csv_text)
+        self.assertNotIn("Pais actual secreto", csv_text)
+        self.assertNotIn("Presencial", csv_text)
+        self.assertNotIn("Indisponível", csv_text)
+
     def test_build_shortlist_csv_excludes_another_users_favorite_metadata(self):
         private_tag = RecruitmentTag.objects.create(user=self.other_user, name="Confidencial")
         other_favorite = Favorite.objects.create(

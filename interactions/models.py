@@ -54,6 +54,9 @@ class RecruitmentTag(models.Model):
     def clean(self):
         self.name = " ".join(self.name.split())
         self.normalized_name = type(self).objects.normalise_name(self.name)
+        max_length = self._meta.get_field("name").max_length
+        if len(self.name) > max_length or len(self.normalized_name) > max_length:
+            raise ValidationError({"name": f"Etiqueta com mais de {max_length} caracteres."})
 
     def save(self, *args, **kwargs):
         self.clean()

@@ -36,7 +36,7 @@ def _snapshot_text(snapshot):
     if not snapshot:
         return ""
     values = [snapshot.get(key, "") for key in ("public_name", "professional_title", "bio", "availability_label", "work_preference_label")]
-    if snapshot.get("location_is_public", True):
+    if snapshot.get("location_is_public", False):
         values.append(snapshot.get("location", ""))
         values.append(snapshot.get("country", ""))
     for key in ("skills", "specializations", "areas", "sectors"):
@@ -53,7 +53,7 @@ def _profile_search_data(profile):
     if payload:
         text = _snapshot_text(payload)
         title = _normalise(payload.get("professional_title"))
-        location = _normalise(payload.get("location")) if payload.get("location_is_public", True) else ""
+        location = _normalise(payload.get("location")) if payload.get("location_is_public", False) else ""
     else:
         values = [profile.public_name, profile.professional_title, profile.bio, profile.get_availability_display(), profile.get_work_preference_display()]
         if profile.location_is_public:
@@ -179,7 +179,7 @@ def public_profiles(params=None):
         for profile in queryset:
             payload = profile.published_snapshot or {}
             if payload:
-                if not payload.get("location_is_public", True):
+                if not payload.get("location_is_public", False):
                     continue
                 candidate = payload.get("country", "")
             elif profile.location_is_public:

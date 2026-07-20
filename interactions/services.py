@@ -116,8 +116,16 @@ def build_shortlist_csv(user, favorites) -> str:
                 "Sector": _csv_safe(", ".join(payload.get("sectors", []))),
                 "Area": _csv_safe(", ".join(payload.get("areas", []))),
                 "Pais publico": _csv_safe(profile.public_country),
-                "Modalidade": _csv_safe(payload.get("work_preference_label", profile.get_work_preference_display())),
-                "Disponibilidade": _csv_safe(payload.get("availability_label", profile.get_availability_display())),
+                "Modalidade": _csv_safe(
+                    payload.get("work_preference_label", "")
+                    if profile.published_snapshot
+                    else profile.get_work_preference_display()
+                ),
+                "Disponibilidade": _csv_safe(
+                    payload.get("availability_label", "")
+                    if profile.published_snapshot
+                    else profile.get_availability_display()
+                ),
                 "Competencias": _csv_safe(", ".join(profile.public_skill_names)),
                 "Idiomas": _csv_safe(", ".join(language.get("name", "") for language in payload.get("languages", []))),
                 "Estado": _csv_safe(favorite.get_status_display()),
