@@ -11,6 +11,7 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 
 from moderation.models import AuditLog
+from interactions.models import Favorite, SavedSearch
 from profiles.models import Profile
 
 from .forms import AccountForm, PasswordConfirmationForm, SignUpForm
@@ -59,7 +60,14 @@ def signup(request):
 
 @login_required
 def dashboard(request):
-    return render(request, "accounts/dashboard.html")
+    return render(
+        request,
+        "accounts/dashboard.html",
+        {
+            "recent_saved_searches": SavedSearch.objects.filter(user=request.user)[:5],
+            "shortlist_count": Favorite.objects.filter(user=request.user).count(),
+        },
+    )
 
 
 @login_required

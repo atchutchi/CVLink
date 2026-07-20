@@ -1,15 +1,14 @@
 {% extends "base.html" %}
-
+{% block title %}Comparar candidatos | CVLink{% endblock %}
 {% block content %}
-<h1>Comparar favoritos</h1>
-{% for favorite in favorites %}
-  <article>
-    <h2>{{ favorite.profile.public_display_name }}</h2>
-    <p>{{ favorite.profile.public_professional_title }}</p>
-    <p>{{ favorite.profile.public_country }}</p>
-    <p>{{ favorite.get_status_display }}</p>
-  </article>
-{% empty %}
-  <p>Selecciona até quatro perfis guardados para comparar.</p>
-{% endfor %}
+<section class="private-page"><div class="container"><div class="admin-heading"><div><span class="eyebrow">Recrutamento</span><h1>Comparar candidatos</h1></div><a href="{% url 'interactions:favorites' %}">Voltar à shortlist</a></div>
+{% if favorites %}<div class="compare-table"><table><thead><tr><th>Critério</th>{% for favorite in favorites %}<th>{{ favorite.profile.public_display_name }}</th>{% endfor %}</tr></thead><tbody>
+<tr><th>Título</th>{% for favorite in favorites %}<td>{{ favorite.profile.public_professional_title|default:"Não indicado" }}</td>{% endfor %}</tr>
+<tr><th>Localização</th>{% for favorite in favorites %}<td>{% if favorite.profile.location_is_public %}{{ favorite.profile.public_location }}{% if favorite.profile.public_location and favorite.profile.public_country %}, {% endif %}{{ favorite.profile.public_country }}{% else %}Não pública{% endif %}</td>{% endfor %}</tr>
+<tr><th>Modalidade</th>{% for favorite in favorites %}<td>{{ favorite.profile.get_work_preference_display }}</td>{% endfor %}</tr>
+<tr><th>Disponibilidade</th>{% for favorite in favorites %}<td>{{ favorite.profile.get_availability_display }}</td>{% endfor %}</tr>
+<tr><th>Competências</th>{% for favorite in favorites %}<td>{{ favorite.profile.public_skill_names|join:", "|default:"Não indicadas" }}</td>{% endfor %}</tr>
+<tr><th>Formação</th>{% for favorite in favorites %}<td>{% for entry in favorite.profile.education_entries.all %}{{ entry }}{% if not forloop.last %}<br>{% endif %}{% empty %}Não indicada{% endfor %}</td>{% endfor %}</tr>
+<tr><th>Idiomas</th>{% for favorite in favorites %}<td>{% for language in favorite.profile.languages.all %}{{ language }}{% if not forloop.last %}<br>{% endif %}{% empty %}Não indicados{% endfor %}</td>{% endfor %}</tr>
+</tbody></table></div>{% else %}<div class="empty-state"><h2>Sem candidatos para comparar</h2><p>Selecciona até quatro perfis na shortlist.</p><a class="btn btn-brand" href="{% url 'interactions:favorites' %}">Voltar à shortlist</a></div>{% endif %}</div></section>
 {% endblock %}

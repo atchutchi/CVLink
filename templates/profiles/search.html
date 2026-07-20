@@ -34,6 +34,16 @@
             </div>
         </form>
 
+        {% if request.user.is_authenticated %}
+        <form class="saved-search-form" method="post" action="{% url 'interactions:saved-search-create' %}">
+            {% csrf_token %}
+            {% for key, value in request.GET.items %}{% if key != "page" %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+            <label for="saved-search-name">Nome da pesquisa</label>
+            <input id="saved-search-name" name="name" maxlength="120" required placeholder="Ex.: Engenheiros com experiência">
+            <button class="btn btn-outline-brand" type="submit">Guardar pesquisa</button>
+        </form>
+        {% endif %}
+
         {% if active_filters %}
         <div class="active-filters" aria-label="Filtros ativos">
             <span class="active-filters-label">A filtrar por:</span>
@@ -42,7 +52,7 @@
         {% endif %}
         <div class="results-heading"><h2>{{ page_obj.paginator.count }} {% if page_obj.paginator.count == 1 %}profissional{% else %}profissionais{% endif %}</h2></div>
         <div class="results-grid">
-            {% for profile in page_obj %}{% include "profiles/_profile_card.html" %}{% empty %}<div class="empty-state"><h2>Nenhum perfil encontrado</h2><p>Altera os termos ou remove alguns filtros.</p><a class="btn btn-outline-brand" href="{% url 'search' %}">Limpar pesquisa</a></div>{% endfor %}
+            {% for profile in page_obj %}{% include "profiles/_profile_card.html" with show_shortlist_action=True %}{% empty %}<div class="empty-state"><h2>Nenhum perfil encontrado</h2><p>Altera os termos ou remove alguns filtros.</p><a class="btn btn-outline-brand" href="{% url 'search' %}">Limpar pesquisa</a></div>{% endfor %}
         </div>
         {% if page_obj.has_other_pages %}<nav class="pagination-nav" aria-label="Paginação"><span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_previous %}<a href="?{{ filter_query }}{% if filter_query %}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %}{% if page_obj.has_next %}<a href="?{{ filter_query }}{% if filter_query %}&{% endif %}page={{ page_obj.next_page_number }}">Seguinte</a>{% endif %}</nav>{% endif %}
     </div>

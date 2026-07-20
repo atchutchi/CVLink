@@ -8,9 +8,10 @@
             <span class="result-badge">{% if profile.status == "approved" %}Perfil aprovado{% else %}Perfil revisto{% endif %}</span>
             {% if profile.cv_file and profile.cv_visibility != "private" %}<span class="result-badge result-badge-muted">CV disponível</span>{% endif %}
         </div>
-        <div class="skill-tags">
-            {% for skill in profile.public_skill_names|slice:":5" %}<span>{{ skill }}</span>{% endfor %}
-        </div>
+        <div class="skill-tags">{% for skill in profile.public_skill_names|slice:":5" %}<span>{{ skill }}</span>{% endfor %}</div>
         <a class="result-card-link" href="{% url 'public-profile' profile.slug %}">Ver perfil completo <span aria-hidden="true">→</span></a>
+        {% if show_shortlist_action and request.user.is_authenticated and profile.user_id != request.user.id %}
+        <form method="post" action="{% url 'interactions:favorite-toggle' profile.slug %}">{% csrf_token %}<button class="btn btn-outline-brand" type="submit">Adicionar a shortlist</button></form>
+        {% endif %}
     </div>
 </article>

@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from interactions.models import ContactRequest, Favorite, Notification, ProfileLike, Report, SavedSearch
-from profiles.models import Profile
+from profiles.models import Experience, Profile
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -270,3 +270,45 @@ class InteractionViewTests(TestCase):
 
         self.assertNotContains(response, other_profile.public_display_name)
         self.assertNotContains(response, "Nota privada")
+
+    def test_favorites_page_shows_recruiter_shortlist_workspace(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("interactions:favorites"))
+
+        self.assertContains(response, "Shortlist")
+        self.assertContains(response, "Estado do processo")
+        self.assertContains(response, "Exportar CSV")
+        self.assertContains(response, "Comparar seleccionados")
+
+    def test_authenticated_search_shows_saved_search_and_shortlist_actions(self):
+        self.profile.professional_title = "Engenheiro civil"
+        self.profile.save(update_fields=("professional_title",))
+        Experience.objects.create(
+            profile=self.profile,
+            title="Engenheiro civil",
+            organization="Empresa",
+            start_date=timezone.now().date().replace(year=timezone.now().year - 5),
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("search"), {"q": "engenheiro", "experience": "5"})
+
+        self.assertContains(response, "Guardar pesquisa")
+        self.assertContains(response, "Adicionar a shortlist")
+
+    def test_anonymous_search_hides_shortlist_action(self):
+        self.profile.professional_title = "Engenheiro civil"
+        self.profile.save(update_fields=("professional_title",))
+
+        response = self.client.get(reverse("search"), {"q": "engenheiro"})
+
+        self.assertNotContains(response, "Adicionar a shortlist")
+
+    def test_dashboard_shows_saved_searches_and_shortlist(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("accounts:dashboard"))
+
+        self.assertContains(response, "Pesquisas guardadas")
+        self.assertContains(response, "Shortlist")
