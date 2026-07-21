@@ -4975,13 +4975,21 @@ p,
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid #c9d5e5;
+    border-radius: 10px;
+    background: #ffffff;
     color: var(--brand-ink);
     font-weight: 650;
     text-decoration: none;
 }
 
-.result-card-link:hover {
+.result-card-link:hover,
+.result-card-link:focus-visible {
+    border-color: var(--brand-orange);
+    background: #fff7ef;
     color: var(--brand-orange-dark);
+    outline: none;
 }
 
 .talent-insights-panel {
@@ -5089,16 +5097,25 @@ p,
     .talent-row-actions {
         grid-column: 1 / -1;
         width: 100%;
-        align-items: stretch;
-        display: grid;
-        grid-template-columns: 1fr;
-        justify-items: stretch;
+        display: flex;
+        align-content: flex-start;
+        align-items: center;
+        justify-content: space-between;
+        justify-items: initial;
+        gap: var(--space-3);
     }
 
-    .talent-row-actions .btn,
-    .talent-row-actions form,
-    .result-card-link {
+    .talent-row-actions form {
+        flex: 1 1 100%;
         width: 100%;
+    }
+
+    .talent-row-actions form .btn {
+        width: 100%;
+    }
+
+    .result-card-link {
+        width: auto;
     }
 }
 
