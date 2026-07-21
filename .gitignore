@@ -13,6 +13,8 @@ media/
 staticfiles/
 tmp/
 output/
+.github/hooks/
+.github/skills/
 .DS_Store
 Thumbs.db
 .idea/

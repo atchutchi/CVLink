@@ -80,6 +80,11 @@
                     <div class="login-field">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         <div class="login-input-wrap{% if field.name == 'password' %} login-password-wrap{% endif %}">
+                            {% if field.name == "password" %}
+                                <i class="bi bi-lock login-input-icon" aria-hidden="true"></i>
+                            {% else %}
+                                <i class="bi bi-envelope login-input-icon" aria-hidden="true"></i>
+                            {% endif %}
                             {{ field }}
                             {% if field.name == "password" %}
                                 <button class="password-toggle" type="button" aria-label="Mostrar palavra-passe" data-password-toggle>Mostrar</button>
