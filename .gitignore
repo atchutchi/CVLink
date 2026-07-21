@@ -12,6 +12,7 @@ htmlcov/
 media/
 staticfiles/
 tmp/
+output/
 .DS_Store
 Thumbs.db
 .idea/

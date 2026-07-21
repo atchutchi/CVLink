@@ -1,37 +1,129 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Iniciar sessão | CVLink{% endblock %}
+{% block title %}Entrar no CVLink | CVLink{% endblock %}
+{% block body_class %}login-screen{% endblock %}
 
 {% block content %}
-<section class="auth-section auth-split">
-    <div class="auth-brand-panel">
-        <span class="eyebrow">Acesso seguro</span>
-        <h1>Entrar no CVLink</h1>
-        <p>Pesquisa talentos, acompanha a tua shortlist ou gere o teu perfil profissional com privacidade.</p>
-        <div class="auth-proof-grid">
-            <div><strong>PALOP</strong><span>Foco africano lusófono</span></div>
-            <div><strong>Verificado</strong><span>Perfis revistos</span></div>
-            <div><strong>Privado</strong><span>Dados protegidos</span></div>
+<section class="login-experience" aria-labelledby="login-title">
+    <div class="login-showcase" aria-label="CVLink em resumo">
+        <div class="login-showcase-inner">
+            <img class="login-showcase-logo" src="{% static 'img/cvlink-logo-light-crop.png' %}" alt="CVLink">
+
+            <div class="login-showcase-copy">
+                <span class="eyebrow">Acesso seguro</span>
+                <h1>Conectamos talento a <span>oportunidades reais</span></h1>
+                <p>A plataforma segura que liga profissionais cabo-verdianos e talento PALOP a empresas, consultorias e projectos no continente africano.</p>
+            </div>
+
+            <div class="login-privacy-note">
+                <i class="bi bi-shield-check login-security-icon" aria-hidden="true"></i>
+                <div>
+                    <strong>Os teus dados estão protegidos.</strong>
+                    <p>Privacidade, consentimento e perfis revistos antes de contactos sensíveis.</p>
+                </div>
+            </div>
+
+            <div class="login-talent-stack" aria-label="Perfis verificados em destaque">
+                <article class="login-mini-profile login-mini-profile-side">
+                    <button type="button" aria-label="Guardar Catarina Silva"><i class="bi bi-star" aria-hidden="true"></i></button>
+                    <img src="{% static 'img/demo-avatars/avatar-1.webp' %}" alt="Catarina Silva">
+                    <strong>Catarina Silva</strong>
+                    <span>Gestora de Projectos</span>
+                    <small>Perfil verificado</small>
+                </article>
+                <article class="login-mini-profile login-mini-profile-main">
+                    <button type="button" aria-label="Guardar Miguel Santos"><i class="bi bi-star" aria-hidden="true"></i></button>
+                    <img src="{% static 'img/demo-avatars/avatar-2.webp' %}" alt="Miguel Santos">
+                    <strong>Miguel Santos</strong>
+                    <span>Desenvolvedor Full Stack</span>
+                    <small>Perfil verificado</small>
+                </article>
+                <article class="login-mini-profile login-mini-profile-side">
+                    <button type="button" aria-label="Guardar Inês Carvalho"><i class="bi bi-star" aria-hidden="true"></i></button>
+                    <img src="{% static 'img/demo-avatars/avatar-3.webp' %}" alt="Inês Carvalho">
+                    <strong>Inês Carvalho</strong>
+                    <span>Especialista de RH</span>
+                    <small>Perfil verificado</small>
+                </article>
+            </div>
+
+            <div class="login-benefits">
+                <div>
+                    <i class="bi bi-lock login-benefit-icon" aria-hidden="true"></i>
+                    <strong>Acesso seguro</strong>
+                    <p>Dados protegidos com regras claras de privacidade.</p>
+                </div>
+                <div>
+                    <i class="bi bi-patch-check login-benefit-icon" aria-hidden="true"></i>
+                    <strong>Perfis verificados</strong>
+                    <p>Profissionais e empresas revistos manualmente.</p>
+                </div>
+                <div>
+                    <i class="bi bi-globe2 login-benefit-icon" aria-hidden="true"></i>
+                    <strong>Foco PALOP</strong>
+                    <p>Cabo Verde como prioridade e expansão africana preparada.</p>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="auth-card auth-card-pro">
-        <span class="eyebrow">Bem-vindo de volta</span>
-        <h2>Iniciar sessão</h2>
-        <p>Acede à tua conta para continuar.</p>
-        <form method="post" novalidate>
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+
+    <div class="login-form-panel">
+        <div class="login-form-shell">
+            <span class="eyebrow">Bem-vindo de volta</span>
+            <h2 id="login-title">Entrar no <span>CVLink</span></h2>
+            <p>Acede à tua conta para continuar.</p>
+
+            <form class="login-form" method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="login-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        <div class="login-input-wrap{% if field.name == 'password' %} login-password-wrap{% endif %}">
+                            {{ field }}
+                            {% if field.name == "password" %}
+                                <button class="password-toggle" type="button" aria-label="Mostrar palavra-passe" data-password-toggle>Mostrar</button>
+                            {% endif %}
+                        </div>
+                        {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                {% for error in form.non_field_errors %}<div class="form-error mb-3">{{ error }}</div>{% endfor %}
+
+                <div class="login-row">
+                    <label class="login-remember">
+                        <input type="checkbox" name="remember">
+                        <span>Manter sessão iniciada</span>
+                    </label>
+                    <a href="{% url 'accounts:password_reset' %}">Esqueceu-se da palavra-passe?</a>
                 </div>
-            {% endfor %}
-            {% for error in form.non_field_errors %}<div class="form-error mb-3">{{ error }}</div>{% endfor %}
-            <button class="btn btn-brand w-100" type="submit">Iniciar sessão</button>
-        </form>
-        <p class="auth-switch"><a href="{% url 'accounts:password_reset' %}">Esqueci-me da palavra-passe</a></p>
-        <p class="auth-switch">Ainda não tens conta? <a href="{% url 'accounts:signup' %}">Criar conta</a>.</p>
+
+                <button class="btn btn-brand login-submit" type="submit">Iniciar sessão</button>
+                <a class="btn btn-outline-brand login-create" href="{% url 'accounts:signup' %}">Criar conta</a>
+            </form>
+
+            <div class="login-role-choice" aria-label="Escolher tipo de conta">
+                <span>ou continuar como</span>
+                <div>
+                    <a href="{% url 'accounts:signup' %}?tipo=profissional">Sou profissional</a>
+                    <a href="{% url 'accounts:signup' %}?tipo=recrutador">Sou recrutador/empresa</a>
+                </div>
+            </div>
+
+            <p class="login-terms">Ao continuar, aceitas os nossos <a href="#">Termos de Utilização</a> e <a href="#">Política de Privacidade</a>.</p>
+        </div>
     </div>
 </section>
+
+<script>
+    document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const input = button.closest(".login-input-wrap").querySelector("input");
+            const isHidden = input.type === "password";
+            input.type = isHidden ? "text" : "password";
+            button.textContent = isHidden ? "Ocultar" : "Mostrar";
+            button.setAttribute("aria-label", isHidden ? "Ocultar palavra-passe" : "Mostrar palavra-passe");
+        });
+    });
+</script>
 {% endblock %}
