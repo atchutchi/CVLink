@@ -251,6 +251,11 @@ class Profile(models.Model):
             return self.public_payload.get("skills", [])
         return list(self.skills.values_list("name", flat=True))
 
+    @property
+    def demo_avatar_path(self):
+        index = ((self.pk or 1) - 1) % 6 + 1
+        return f"img/demo-avatars/avatar-{index}.webp"
+
 
 class ProfileRevision(models.Model):
     class Status(models.TextChoices):

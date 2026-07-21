@@ -18,12 +18,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{% static 'css/app.css' %}" rel="stylesheet">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
     <header class="site-header">
         <nav class="container site-nav" aria-label="Navegação principal">
             <a class="brand-crop" href="{% url 'home' %}" aria-label="CVLink, página inicial">
-                <img class="brand-image" src="{% static 'img/cvlink-logo.png' %}" alt="CVLink">
+                <img class="brand-image brand-image-default" src="{% static 'img/cvlink-logo-transparent.png' %}" alt="CVLink">
+                <img class="brand-image brand-image-light" src="{% static 'img/cvlink-logo-light.png' %}" alt="CVLink">
             </a>
             <div class="nav-discovery">
                 <a class="nav-link-custom" href="{% url 'home' %}#como-funciona">Como funciona</a>

@@ -1,69 +1,132 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Pesquisar profissionais | CVLink{% endblock %}
 {% block meta_description %}Pesquisa quadros cabo-verdianos e profissionais PALOP por competência, área, localização, experiência e disponibilidade.{% endblock %}
 {% block robots %}noindex,nofollow{% endblock %}
+{% block body_class %}talent-search-screen{% endblock %}
 
 {% block content %}
-<section class="search-page search-workspace">
-    <div class="container search-layout">
-        <aside class="search-sidebar" aria-label="Filtros">
-            <div class="sidebar-heading">
-                <span class="eyebrow">Filtros</span>
-                <a href="{% url 'search' %}">Limpar</a>
-            </div>
-            <form class="filter-panel filter-panel-vertical" method="get" role="search" aria-describedby="filter-help">
-                <p id="filter-help" class="filter-help">Combina critérios para encontrar talento cabo-verdiano e PALOP com melhor alinhamento.</p>
-                <div class="filter-query">
-                    <label for="q">Palavras-chave</label>
-                    <input id="q" name="q" type="search" value="{{ request.GET.q }}" placeholder="Ex.: engenharia, gestão, comunicação">
-                </div>
-                <div><label for="sector">Sector</label><select id="sector" name="sector"><option value="">Todos</option>{% for item in sectors %}<option value="{{ item.slug }}" {% if request.GET.sector == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></div>
-                <div><label for="area">Área</label><select id="area" name="area"><option value="">Todas</option>{% for item in areas %}<option value="{{ item.slug }}" {% if request.GET.area == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></div>
-                <div><label for="specialization">Especialização</label><select id="specialization" name="specialization"><option value="">Todas</option>{% for item in specializations %}<option value="{{ item.slug }}" {% if request.GET.specialization == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></div>
-                <div><label for="skill">Competência</label><select id="skill" name="skill"><option value="">Todas</option>{% for item in skills %}<option value="{{ item.slug }}" {% if request.GET.skill == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select></div>
-                <div><label for="location">Localização pública</label><input id="location" name="location" value="{{ request.GET.location }}" placeholder="Ex.: Praia, Mindelo, Bissau"></div>
-                <div><label for="availability">Disponibilidade</label><select id="availability" name="availability"><option value="">Todas</option>{% for value,label in availability_choices %}<option value="{{ value }}" {% if request.GET.availability == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-                <div><label for="work_preference">Modalidade</label><select id="work_preference" name="work_preference"><option value="">Todas</option>{% for value,label in work_preference_choices %}<option value="{{ value }}" {% if request.GET.work_preference == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-                <div><label for="experience">Experiência mínima</label><select id="experience" name="experience"><option value="">Qualquer experiência</option><option value="1" {% if request.GET.experience == "1" %}selected{% endif %}>1 ano ou mais</option><option value="3" {% if request.GET.experience == "3" %}selected{% endif %}>3 anos ou mais</option><option value="5" {% if request.GET.experience == "5" %}selected{% endif %}>5 anos ou mais</option><option value="10" {% if request.GET.experience == "10" %}selected{% endif %}>10 anos ou mais</option></select></div>
-                <div><label for="cv">Currículo</label><select id="cv" name="cv"><option value="">Com ou sem currículo</option><option value="1" {% if request.GET.cv == "1" %}selected{% endif %}>Currículo disponível</option></select></div>
-                <div><label for="order">Ordenar</label><select id="order" name="order"><option value="recent">Mais recentes</option><option value="name" {% if request.GET.order == "name" %}selected{% endif %}>Nome</option></select></div>
-                <div class="filter-actions">
-                    <button class="btn btn-brand" type="submit">Mostrar resultados</button>
-                </div>
-            </form>
-        </aside>
+<section class="talent-search-app">
+    <aside class="talent-filter-rail" aria-label="Filtros">
+        <div class="filter-rail-header">
+            <span>Filtros</span>
+            <a href="{% url 'search' %}">Limpar</a>
+        </div>
+        <form class="talent-filter-form" method="get" role="search">
+            <label>
+                <span>Palavras-chave</span>
+                <input name="q" type="search" value="{{ request.GET.q }}" placeholder="Ex.: Python, gestão de projecto">
+            </label>
+            <label>
+                <span>Área de actuação</span>
+                <select name="area"><option value="">Todas</option>{% for item in areas %}<option value="{{ item.slug }}" {% if request.GET.area == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select>
+            </label>
+            <label>
+                <span>Sector</span>
+                <select name="sector"><option value="">Todos</option>{% for item in sectors %}<option value="{{ item.slug }}" {% if request.GET.sector == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select>
+            </label>
+            <fieldset>
+                <legend>Disponibilidade</legend>
+                <label class="check-row"><input type="radio" name="availability" value="" {% if not request.GET.availability %}checked{% endif %}> Todas</label>
+                {% for value,label in availability_choices %}
+                    <label class="check-row"><input type="radio" name="availability" value="{{ value }}" {% if request.GET.availability == value %}checked{% endif %}> {{ label }}</label>
+                {% endfor %}
+            </fieldset>
+            <label>
+                <span>Competência</span>
+                <select name="skill"><option value="">Todas</option>{% for item in skills %}<option value="{{ item.slug }}" {% if request.GET.skill == item.slug %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select>
+            </label>
+            <label>
+                <span>Experiência mínima</span>
+                <select name="experience"><option value="">Qualquer experiência</option><option value="1" {% if request.GET.experience == "1" %}selected{% endif %}>1 ano ou mais</option><option value="3" {% if request.GET.experience == "3" %}selected{% endif %}>3 anos ou mais</option><option value="5" {% if request.GET.experience == "5" %}selected{% endif %}>5 anos ou mais</option><option value="10" {% if request.GET.experience == "10" %}selected{% endif %}>10 anos ou mais</option></select>
+            </label>
+            <label>
+                <span>Modalidade</span>
+                <select name="work_preference"><option value="">Todas</option>{% for value,label in work_preference_choices %}<option value="{{ value }}" {% if request.GET.work_preference == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+            </label>
+            <label>
+                <span>Currículo</span>
+                <select name="cv"><option value="">Com ou sem currículo</option><option value="1" {% if request.GET.cv == "1" %}selected{% endif %}>Currículo disponível</option></select>
+            </label>
+            <button class="btn btn-brand" type="submit">Aplicar filtros</button>
+        </form>
+    </aside>
 
-        <div class="search-results-panel">
-            <div class="search-topbar">
-                <div>
-                    <span class="eyebrow">Talentos PALOP</span>
-                    <h1>Pesquisar profissionais</h1>
-                    <p>{{ page_obj.paginator.count }} {% if page_obj.paginator.count == 1 %}profissional encontrado{% else %}profissionais encontrados{% endif %}</p>
-                </div>
-                {% if request.user.is_authenticated %}
-                <form class="saved-search-form saved-search-compact" method="post" action="{% url 'interactions:saved-search-create' %}">
+    <main class="talent-search-main">
+        <header class="talent-search-topbar">
+            <div>
+                <span class="eyebrow">Talentos PALOP</span>
+                <h1>Pesquisar profissionais</h1>
+            </div>
+            {% if request.user.is_authenticated %}
+                <form class="save-search-inline" method="post" action="{% url 'interactions:saved-search-create' %}">
                     {% csrf_token %}
                     {% for key, value in request.GET.items %}{% if key != "page" %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
-                    <label for="saved-search-name">Nome da pesquisa</label>
-                    <input id="saved-search-name" name="name" maxlength="120" required placeholder="Ex.: Engenharia em Cabo Verde">
+                    <input name="name" maxlength="120" required placeholder="Nome da pesquisa">
                     <button class="btn btn-outline-brand" type="submit">Guardar pesquisa</button>
                 </form>
-                {% endif %}
-            </div>
-
-            {% if active_filters %}
-            <div class="active-filters" aria-label="Filtros activos">
-                <span class="active-filters-label">Filtros activos:</span>
-                {% for item in active_filters %}<a class="filter-tag" href="{{ item.remove_url }}" aria-label="Remover filtro {{ item.label }}: {{ item.value }}">{{ item.label }}: {{ item.value }} <span aria-hidden="true">×</span></a>{% endfor %}
-            </div>
             {% endif %}
+        </header>
 
-            <div class="results-grid results-list">
-                {% for profile in page_obj %}{% include "profiles/_profile_card.html" with show_shortlist_action=True %}{% empty %}<div class="empty-state"><h2>Nenhum perfil encontrado</h2><p>Altera os termos ou remove alguns filtros.</p><a class="btn btn-outline-brand" href="{% url 'search' %}">Limpar pesquisa</a></div>{% endfor %}
+        <form class="talent-search-bar" method="get" role="search">
+            <label>
+                <span class="visually-hidden">Cargo, palavra-chave ou competência</span>
+                <input name="q" type="search" value="{{ request.GET.q }}" placeholder="Cargo, palavra-chave ou competência">
+            </label>
+            <label>
+                <span class="visually-hidden">Localização</span>
+                <input name="location" value="{{ request.GET.location }}" placeholder="Localização pública opcional">
+            </label>
+            <input type="hidden" name="experience" value="{{ request.GET.experience }}">
+            <button class="btn btn-brand" type="submit">Pesquisar</button>
+        </form>
+
+        {% if active_filters %}
+            <div class="active-filters talent-active-filters" aria-label="Filtros activos">
+                <span class="active-filters-label">Filtros activos</span>
+                {% for item in active_filters %}<a class="filter-tag" href="{{ item.remove_url }}" aria-label="Remover filtro {{ item.label }}: {{ item.value }}">{{ item.label }}: {{ item.value }} <span aria-hidden="true">×</span></a>{% endfor %}
+                <a class="clear-all-link" href="{% url 'search' %}">Limpar todos</a>
             </div>
-            {% if page_obj.has_other_pages %}<nav class="pagination-nav" aria-label="Paginação"><span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_previous %}<a href="?{{ filter_query }}{% if filter_query %}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %}{% if page_obj.has_next %}<a href="?{{ filter_query }}{% if filter_query %}&{% endif %}page={{ page_obj.next_page_number }}">Seguinte</a>{% endif %}</nav>{% endif %}
+        {% endif %}
+
+        <div class="talent-results-shell">
+            <section class="talent-results-list" aria-labelledby="talent-results-title">
+                <div class="talent-results-toolbar">
+                    <h2 id="talent-results-title">{{ page_obj.paginator.count }} {% if page_obj.paginator.count == 1 %}profissional encontrado{% else %}profissionais encontrados{% endif %}</h2>
+                    <label>Ordenar por <select name="order" form="unused"><option>Mais relevantes</option><option>Mais recentes</option></select></label>
+                </div>
+                <div class="talent-row-list">
+                    {% for profile in page_obj %}{% include "profiles/_profile_card.html" with show_shortlist_action=True %}{% empty %}<div class="empty-state"><h2>Nenhum perfil encontrado</h2><p>Altera os termos ou remove alguns filtros.</p><a class="btn btn-outline-brand" href="{% url 'search' %}">Limpar pesquisa</a></div>{% endfor %}
+                </div>
+                {% if page_obj.has_other_pages %}<nav class="pagination-nav" aria-label="Paginação"><span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_previous %}<a href="?{{ filter_query }}{% if filter_query %}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %}{% if page_obj.has_next %}<a href="?{{ filter_query }}{% if filter_query %}&{% endif %}page={{ page_obj.next_page_number }}">Seguinte</a>{% endif %}</nav>{% endif %}
+            </section>
+
+            <aside class="talent-insights-panel" aria-label="Sugestões de pesquisa">
+                <section>
+                    <div class="panel-title-row"><h2>Talentos recentes</h2><a href="{% url 'search' %}">Ver todos</a></div>
+                    <div class="mini-talent-list">
+                        {% for profile in page_obj.object_list|slice:":4" %}
+                            <a href="{% url 'public-profile' profile.slug %}">
+                                {% if profile.photo %}<img src="{% url 'profile-photo' profile.slug %}" alt="Fotografia de {{ profile.public_display_name }}">{% else %}<img src="{% static profile.demo_avatar_path %}" alt="Retrato profissional genérico">{% endif %}
+                                <span><strong>{{ profile.public_display_name }}</strong><small>{{ profile.public_professional_title|default:"Perfil profissional" }}</small></span>
+                            </a>
+                        {% empty %}
+                            <p>Sem talentos recentes para mostrar.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+                <section>
+                    <h2>Filtros recomendados</h2>
+                    <div class="recommended-filter-list">
+                        <a href="{% url 'search' %}?experience=5">Nível sénior <span>+</span></a>
+                        <a href="{% url 'search' %}?work_preference=remote">Remoto <span>+</span></a>
+                        <a href="{% url 'search' %}?q=gestão">Gestão de projectos <span>+</span></a>
+                        <a href="{% url 'search' %}?cv=1">CV disponível <span>+</span></a>
+                    </div>
+                </section>
+            </aside>
         </div>
-    </div>
+    </main>
 </section>
 {% endblock %}

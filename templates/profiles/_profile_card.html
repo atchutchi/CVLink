@@ -1,26 +1,36 @@
-<article class="result-card talent-card">
-    <div class="profile-avatar profile-avatar-portrait" aria-hidden="true">
-        <span>{{ profile.public_display_name|slice:":1"|upper }}</span>
-    </div>
-    <div class="result-card-body">
-        <div class="talent-card-header">
+{% load static %}
+<article class="talent-row-card">
+    <a class="talent-photo-link" href="{% url 'public-profile' profile.slug %}" aria-label="Ver perfil de {{ profile.public_display_name }}">
+        {% if profile.photo %}
+            <img class="talent-photo" src="{% url 'profile-photo' profile.slug %}" alt="Fotografia de {{ profile.public_display_name }}">
+        {% else %}
+            <img class="talent-photo" src="{% static profile.demo_avatar_path %}" alt="Retrato profissional genérico">
+        {% endif %}
+        <span class="availability-dot" aria-hidden="true"></span>
+    </a>
+    <div class="talent-row-main">
+        <div class="talent-row-heading">
             <div>
                 <h2><a href="{% url 'public-profile' profile.slug %}">{{ profile.public_display_name }}</a></h2>
-                <p class="result-title">{{ profile.public_professional_title|default:"Perfil profissional" }}</p>
+                <p>{{ profile.public_professional_title|default:"Perfil profissional" }}</p>
             </div>
-            <span class="result-badge">{% if profile.status == "approved" %}Perfil aprovado{% else %}Perfil revisto{% endif %}</span>
+            <span class="approved-pill">Perfil aprovado</span>
         </div>
-        {% if profile.public_location or profile.public_country %}<p class="result-location">{{ profile.public_location }}{% if profile.public_location and profile.public_country %}, {% endif %}{{ profile.public_country }}</p>{% endif %}
-        <div class="result-meta" aria-label="Sinais de confiança">
-            {% if profile.cv_file and profile.cv_visibility != "private" %}<span class="result-badge result-badge-muted">CV disponível</span>{% endif %}
-            <span class="result-badge result-badge-blue">Talento PALOP</span>
+        <div class="talent-row-meta">
+            {% if profile.cv_file and profile.cv_visibility != "private" %}<span>CV disponível</span>{% endif %}
+            {% if profile.public_location or profile.public_country %}<span>{{ profile.public_location }}{% if profile.public_location and profile.public_country %}, {% endif %}{{ profile.public_country }}</span>{% endif %}
+            <span>Talento PALOP</span>
         </div>
-        <div class="skill-tags">{% for skill in profile.public_skill_names|slice:":5" %}<span>{{ skill }}</span>{% endfor %}</div>
-        <div class="talent-card-actions">
-            <a class="result-card-link" href="{% url 'public-profile' profile.slug %}">Ver perfil completo</a>
-            {% if show_shortlist_action and request.user.is_authenticated and profile.user_id != request.user.id %}
-            <form method="post" action="{% url 'interactions:favorite-add' profile.slug %}">{% csrf_token %}<button class="btn btn-outline-brand" type="submit" aria-label="Adicionar a shortlist">Adicionar à shortlist</button></form>
-            {% endif %}
-        </div>
+        <div class="skill-tags talent-skills">{% for skill in profile.public_skill_names|slice:":6" %}<span>{{ skill }}</span>{% endfor %}</div>
+    </div>
+    <div class="talent-row-actions">
+        <span class="availability-label">Disponível agora</span>
+        {% if show_shortlist_action and request.user.is_authenticated and profile.user_id != request.user.id %}
+            <form method="post" action="{% url 'interactions:favorite-add' profile.slug %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-brand" type="submit" aria-label="Adicionar a shortlist">Adicionar à shortlist</button>
+            </form>
+        {% endif %}
+        <a class="result-card-link" href="{% url 'public-profile' profile.slug %}">Ver detalhes</a>
     </div>
 </article>
