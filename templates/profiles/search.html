@@ -8,11 +8,12 @@
 
 {% block content %}
 <section class="talent-search-app">
-    <aside class="talent-filter-rail" aria-label="Filtros">
+    <aside class="talent-filter-rail" id="talent-filters" aria-label="Filtros">
         <div class="filter-rail-header">
-            <span>Filtros</span>
+            <span>Filtros de pesquisa</span>
             <a href="{% url 'search' %}">Limpar</a>
         </div>
+        <p class="filter-rail-note">Afina a lista por área, sector, disponibilidade e experiência. Mantém apenas os filtros que ajudam a decidir.</p>
         <form class="talent-filter-form" method="get" role="search">
             <label>
                 <span>Palavras-chave</span>
@@ -57,7 +58,7 @@
         <header class="talent-search-topbar">
             <div>
                 <span class="eyebrow">Talentos PALOP</span>
-                <h1>Pesquisar profissionais</h1>
+                <h1>Pesquisar talentos</h1>
             </div>
             {% if request.user.is_authenticated %}
                 <form class="save-search-inline" method="post" action="{% url 'interactions:saved-search-create' %}">
@@ -81,6 +82,11 @@
             <input type="hidden" name="experience" value="{{ request.GET.experience }}">
             <button class="btn btn-brand" type="submit">Pesquisar</button>
         </form>
+
+        <div class="mobile-search-tools" aria-label="Ferramentas de pesquisa">
+            <a class="btn btn-outline-brand" href="#talent-filters">Ajustar filtros</a>
+            <span>{{ page_obj.paginator.count }} resultado{% if page_obj.paginator.count != 1 %}s{% endif %}</span>
+        </div>
 
         {% if active_filters %}
             <div class="active-filters talent-active-filters" aria-label="Filtros activos">
