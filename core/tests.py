@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 
 from profiles.models import Profile
 from taxonomy.models import Area, Sector
@@ -8,10 +9,26 @@ from .features import FEATURES, active_features, locked_features
 
 
 class HomeViewTests(TestCase):
-    def test_home_page_is_available(self):
+    def test_home_page_redirects_anonymous_users_to_login(self):
+        response = self.client.get("/")
+
+        self.assertRedirects(response, reverse("accounts:login"))
+
+    def test_home_page_is_available_for_authenticated_users(self):
+        user = get_user_model().objects.create_user(email="home@example.com", password="test-pass")
+        self.client.force_login(user)
         response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Iniciar sess")
+        self.assertNotContains(response, "Criar perfil")
+
+    def test_login_page_does_not_render_global_header(self):
+        response = self.client.get(reverse("accounts:login"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Entrar no")
+        self.assertNotContains(response, 'class="site-header"')
 
 
 class SeoAndOperationsTests(TestCase):
@@ -54,15 +71,16 @@ class SeoAndOperationsTests(TestCase):
         self.assertEqual(response.json()["status"], "ok")
 
     def test_home_page_presents_product_and_search(self):
+        self.client.force_login(self.profile.user)
         response = self.client.get("/")
 
         self.assertContains(response, "Quadros cabo-verdianos")
         self.assertContains(response, "PALOP")
         self.assertContains(response, "África lusófona")
         self.assertContains(response, 'name="q"')
-        self.assertContains(response, "/conta/criar/")
-        self.assertContains(response, "/conta/entrar/")
         self.assertContains(response, "cvlink-logo.png")
+        self.assertNotContains(response, "/conta/criar/")
+        self.assertNotContains(response, "/conta/entrar/")
         self.assertNotContains(response, "Europa")
         self.assertNotContains(response, "europeu")
 
@@ -73,6 +91,7 @@ class SeoAndOperationsTests(TestCase):
         self.assertIn("billing", FEATURES)
         self.assertTrue(all(not feature.public_enabled for feature in locked_features()))
 
+        self.client.force_login(self.profile.user)
         response = self.client.get("/")
         self.assertContains(response, "Vagas")
         self.assertContains(response, "Equipas de recrutamento")
@@ -80,6 +99,7 @@ class SeoAndOperationsTests(TestCase):
         self.assertContains(response, "Bloqueado")
 
     def test_home_page_declares_brand_favicon(self):
+        self.client.force_login(self.profile.user)
         response = self.client.get("/")
 
         self.assertContains(response, 'rel="icon"')

@@ -131,5 +131,5 @@ def deactivate_account(request):
         user.is_active = False
         user.save(update_fields=("is_active",))
         logout(request)
-        return redirect("home")
+        return redirect("accounts:login")
     return render(request, "accounts/deactivate.html", {"form": form})

@@ -113,7 +113,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:dashboard"
-LOGOUT_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "accounts:login"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "CVLink <noreply@cvlink.local>")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",

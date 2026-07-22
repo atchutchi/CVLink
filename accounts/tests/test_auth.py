@@ -64,5 +64,5 @@ class AuthenticationFlowTests(TestCase):
 
         response = self.client.post("/conta/sair/")
 
-        self.assertRedirects(response, "/")
+        self.assertRedirects(response, "/conta/entrar/")
         self.assertNotIn("_auth_user_id", self.client.session)

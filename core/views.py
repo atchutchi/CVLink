@@ -1,13 +1,16 @@
 from django.http import HttpResponse, JsonResponse
 from django.db import connection
 from django.db.utils import OperationalError
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from .features import active_features, locked_features
 
 
 def home(request):
+    if not request.user.is_authenticated:
+        return redirect("accounts:login")
+
     return render(
         request,
         "core/home.html",

@@ -65,7 +65,7 @@ class AccountSecurityTests(TestCase):
         self.assertTrue(user.is_active)
 
         response = self.client.post(reverse("accounts:deactivate"), {"password": "correct-pass"})
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("accounts:login"))
         user.refresh_from_db()
         self.assertFalse(user.is_active)
         self.assertFalse(user.profile.is_public)
