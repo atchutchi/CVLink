@@ -9,12 +9,24 @@ class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["cv_visibility"].required = False
+        self.fields["target_roles"].help_text = (
+            "Lista os cargos e funções pelos quais queres ser encontrado. "
+            "Ex.: engenheiro civil, director de obra, fiscal de construção."
+        )
+        self.fields["search_keywords"].help_text = (
+            "Inclui termos que recrutadores podem escrever na pesquisa. "
+            "Separa por vírgulas. Ex.: AutoCAD, orçamento, fiscalização, betão armado."
+        )
+        self.fields["years_experience"].help_text = "Ajuda o filtro de experiência quando o teu percurso tem datas incompletas."
+        self.fields["seniority_level"].help_text = "Ajuda recrutadores a distinguir entrada, júnior, intermédio, sénior e liderança."
 
     class Meta:
         model = Profile
         fields = (
             "public_name",
             "professional_title",
+            "target_roles",
+            "search_keywords",
             "bio",
             "location",
             "location_is_public",
@@ -24,6 +36,8 @@ class ProfileForm(forms.ModelForm):
             "skills",
             "availability",
             "work_preference",
+            "years_experience",
+            "seniority_level",
             "willing_to_relocate",
             "phone",
             "whatsapp",
@@ -36,6 +50,8 @@ class ProfileForm(forms.ModelForm):
         )
         widgets = {
             "bio": forms.Textarea(attrs={"rows": 5}),
+            "target_roles": forms.Textarea(attrs={"rows": 3, "placeholder": "Ex.: Engenheiro civil, director de obra, fiscal de construção"}),
+            "search_keywords": forms.Textarea(attrs={"rows": 3, "placeholder": "Ex.: AutoCAD, orçamento, fiscalização, betão armado, MS Project"}),
             "specializations": forms.SelectMultiple(attrs={"size": 6}),
             "skills": forms.SelectMultiple(attrs={"size": 8}),
         }

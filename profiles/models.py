@@ -28,6 +28,13 @@ class Profile(models.Model):
         REMOTE = "remote", "Remoto"
         HYBRID = "hybrid", "Híbrido"
 
+    class Seniority(models.TextChoices):
+        ENTRY = "entry", "Entrada"
+        JUNIOR = "junior", "Júnior"
+        MID = "mid", "Intermédio"
+        SENIOR = "senior", "Sénior"
+        LEAD = "lead", "Liderança"
+
     class ContactVisibility(models.TextChoices):
         FORM = "form", "Apenas formulário"
         REGISTERED = "registered", "Utilizadores registados"
@@ -50,6 +57,16 @@ class Profile(models.Model):
     public_name = models.CharField("nome público", max_length=160, blank=True)
     professional_title = models.CharField("título profissional", max_length=180, blank=True)
     bio = models.TextField("biografia", blank=True)
+    target_roles = models.TextField(
+        "funções alvo",
+        blank=True,
+        help_text="Cargos pelos quais queres ser encontrado. Ex.: Engenheiro civil, gestor de projectos, consultor técnico.",
+    )
+    search_keywords = models.TextField(
+        "palavras-chave de pesquisa",
+        blank=True,
+        help_text="Termos que recrutadores podem usar. Ex.: obras, fiscalização, AutoCAD, procurement, RH.",
+    )
     location = models.CharField("localização", max_length=160, blank=True)
     location_is_public = models.BooleanField("mostrar localização", default=True)
     country = models.CharField("país", max_length=100, default="Guiné-Bissau")
@@ -70,6 +87,13 @@ class Profile(models.Model):
         default=WorkPreference.HYBRID,
     )
     willing_to_relocate = models.BooleanField("disponível para mudança", default=False)
+    years_experience = models.PositiveSmallIntegerField("anos de experiência", null=True, blank=True)
+    seniority_level = models.CharField(
+        "nível profissional",
+        max_length=20,
+        choices=Seniority.choices,
+        blank=True,
+    )
     contact_visibility = models.CharField(
         "visibilidade dos contactos",
         max_length=20,
@@ -170,6 +194,8 @@ class Profile(models.Model):
             "public_name": self.public_name,
             "professional_title": self.professional_title,
             "bio": self.bio,
+            "target_roles": self.target_roles,
+            "search_keywords": self.search_keywords,
             "location": self.location,
             "location_is_public": self.location_is_public,
             "country": self.country,
@@ -177,6 +203,9 @@ class Profile(models.Model):
             "availability_label": self.get_availability_display(),
             "work_preference": self.work_preference,
             "work_preference_label": self.get_work_preference_display(),
+            "years_experience": self.years_experience,
+            "seniority_level": self.seniority_level,
+            "seniority_label": self.get_seniority_level_display() if self.seniority_level else "",
             "skills": list(self.skills.values_list("name", flat=True)),
             "specializations": list(self.specializations.values_list("name", flat=True)),
             "areas": list(self.specializations.values_list("area__name", flat=True).distinct()),

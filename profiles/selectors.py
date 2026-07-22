@@ -17,14 +17,79 @@ from .models import Profile
 
 
 _SYNONYMS = {
-    "informatico": ("informatico", "tecnico de informatica", "suporte tecnico", "administrador de sistemas", "ti"),
-    "programador": ("programador", "desenvolvedor", "developer", "software engineer"),
-    "desenvolvedor": ("programador", "desenvolvedor", "developer", "software engineer"),
-    "comunicacao": ("comunicacao", "comunicacao institucional", "relacoes publicas", "comunicacao social"),
+    "administracao": ("administracao", "administrativo", "assistente administrativo", "office manager"),
+    "civil": ("civil", "construcao civil", "obras", "fiscalizacao", "engenharia civil"),
+    "comunicacao": ("comunicacao", "comunicacao institucional", "relacoes publicas", "comunicacao social", "jornalismo"),
+    "conteudo": ("conteudo", "conteudos", "criacao de conteudo", "social media", "multimedia"),
+    "conteudos": ("conteudo", "conteudos", "criacao de conteudo", "social media", "multimedia"),
+    "developer": ("developer", "programador", "desenvolvedor", "software engineer", "fullstack", "full stack"),
+    "desenvolvedor": ("programador", "desenvolvedor", "developer", "software engineer", "fullstack", "full stack"),
+    "direito": ("direito", "juridico", "juridica", "legal", "assessoria juridica"),
+    "designer": ("designer", "design grafico", "web designer", "branding", "identidade visual"),
+    "engenharia": ("engenharia", "engenheiro", "engenheira"),
+    "engenheiro": ("engenheiro", "engenheira", "engenharia", "eng", "engenharia civil", "engenharia mecanica"),
+    "energia": ("energia", "energias renovaveis", "agua", "saneamento"),
+    "financas": ("financas", "financeiro", "credito", "contabilidade", "economia"),
+    "gestao": ("gestao", "gestor", "gestora", "manager", "project manager", "projecto", "projeto"),
+    "informatica": ("informatica", "informatico", "tecnologia da informacao", "tecnologia de informacao", "sistemas", "ti", "it"),
+    "informatico": ("informatico", "informatica", "tecnico de informatica", "suporte tecnico", "administrador de sistemas", "ti", "it"),
+    "juridica": ("juridica", "juridico", "direito", "legal", "assessoria juridica"),
+    "marketing": ("marketing", "marketing digital", "vendas", "comercial", "branding"),
+    "mecanico": ("mecanico", "mecanica", "engenharia mecanica", "engenheiro mecanico"),
+    "medicina": ("medicina", "medico", "saude", "estudante de medicina"),
+    "programador": ("programador", "desenvolvedor", "developer", "software engineer", "fullstack", "full stack"),
+    "projeto": ("projeto", "projecto", "project manager", "gestao de projectos", "gestao de projetos"),
+    "projecto": ("projeto", "projecto", "project manager", "gestao de projectos", "gestao de projetos"),
     "rh": ("rh", "recursos humanos"),
     "recursos": ("recursos", "recursos humanos"),
-    "ti": ("ti", "tecnologia da informacao", "informatica"),
+    "senior": ("senior", "senioridade", "lideranca", "lead", "chefe", "director"),
+    "social": ("social", "social media", "redes sociais", "comunicacao digital"),
+    "software": ("software", "programador", "desenvolvedor", "developer", "software engineer", "fullstack", "full stack", "desenvolvimento web", "desenvolvimento fullstack"),
+    "ti": ("ti", "it", "tecnologia da informacao", "tecnologia de informacao", "informatica", "sistemas"),
 }
+
+_STOPWORDS = {
+    "a",
+    "as",
+    "com",
+    "da",
+    "das",
+    "de",
+    "do",
+    "dos",
+    "e",
+    "em",
+    "na",
+    "nas",
+    "no",
+    "nos",
+    "o",
+    "os",
+    "para",
+    "por",
+    "area",
+    "areas",
+    "cargo",
+    "cargos",
+    "coisa",
+    "coisas",
+    "funcao",
+    "funcoes",
+    "funcionario",
+    "funcionarios",
+    "funcionaria",
+    "funcionarias",
+    "perfil",
+    "perfis",
+    "pessoa",
+    "pessoas",
+    "profissional",
+    "profissionais",
+    "talento",
+    "talentos",
+}
+_SHORT_EXACT_TERMS = {"bi", "cv", "ia", "qa", "rh", "ti", "ui", "ux"}
+_WORD_RE = re.compile(r"\w+", flags=re.UNICODE)
 
 
 def _normalise(value):
@@ -32,10 +97,56 @@ def _normalise(value):
     return "".join(char for char in value if not unicodedata.combining(char)).casefold()
 
 
+def _tokens(value):
+    return [
+        token
+        for token in (_normalise(item) for item in _WORD_RE.findall(value or ""))
+        if token and (token not in _STOPWORDS or token in _SHORT_EXACT_TERMS)
+    ]
+
+
+def _term_options(token):
+    options = {token}
+    if len(token) > 3 and token.endswith("s"):
+        options.add(token.rstrip("s"))
+    options.update(_SYNONYMS.get(token, ()))
+    options.update(_SYNONYMS.get(token.rstrip("s"), ()))
+    return tuple(sorted(options, key=len, reverse=True))
+
+
+def _contains_option(text, option):
+    option = _normalise(option).strip()
+    if not option:
+        return False
+    if option in _SHORT_EXACT_TERMS or len(option) <= 2:
+        return re.search(rf"(?<!\w){re.escape(option)}(?!\w)", text) is not None
+    if " " in option:
+        return option in text
+    text_tokens = set(_tokens(text))
+    if option in text_tokens:
+        return True
+    singular = option.rstrip("s") if len(option) > 3 else option
+    if singular in text_tokens:
+        return True
+    return any(len(token) > 3 and token.rstrip("s") == singular for token in text_tokens)
+
+
 def _snapshot_text(snapshot):
     if not snapshot:
         return ""
-    values = [snapshot.get(key, "") for key in ("public_name", "professional_title", "bio", "availability_label", "work_preference_label")]
+    values = [
+        snapshot.get(key, "")
+        for key in (
+            "public_name",
+            "professional_title",
+            "bio",
+            "target_roles",
+            "search_keywords",
+            "availability_label",
+            "work_preference_label",
+            "seniority_label",
+        )
+    ]
     if snapshot.get("location_is_public", False):
         values.append(snapshot.get("location", ""))
         values.append(snapshot.get("country", ""))
@@ -55,7 +166,16 @@ def _profile_search_data(profile):
         title = _normalise(payload.get("professional_title"))
         location = _normalise(payload.get("location")) if payload.get("location_is_public", False) else ""
     else:
-        values = [profile.public_name, profile.professional_title, profile.bio, profile.get_availability_display(), profile.get_work_preference_display()]
+        values = [
+            profile.public_name,
+            profile.professional_title,
+            profile.bio,
+            profile.target_roles,
+            profile.search_keywords,
+            profile.get_availability_display(),
+            profile.get_work_preference_display(),
+            profile.get_seniority_level_display() if profile.seniority_level else "",
+        ]
         if profile.location_is_public:
             values.extend((profile.location, profile.country))
         values.extend(profile.specializations.values_list("name", flat=True))
@@ -76,9 +196,11 @@ def _profile_search_data(profile):
 
 
 def _query_matches(text, query):
-    tokens = [_normalise(token) for token in re.findall(r"\w+", query, flags=re.UNICODE) if token.strip()]
+    tokens = _tokens(query)
+    if not tokens:
+        return True
     return all(
-        any(option in text for option in _SYNONYMS.get(token, (token,)) + _SYNONYMS.get(token.rstrip("s"), (token.rstrip("s"),)))
+        any(_contains_option(text, option) for option in _term_options(token))
         for token in tokens
     )
 
@@ -121,7 +243,17 @@ def public_profiles(params=None):
                 normalised_query = _normalise(query)
                 if normalised_query and normalised_query in title:
                     score += 100
-                score += sum(10 for token in re.findall(r"\w+", query, flags=re.UNICODE) if _normalise(token) in title)
+                payload = profile.published_snapshot or {}
+                role_text = _normalise(payload.get("target_roles", profile.target_roles))
+                keyword_text = _normalise(payload.get("search_keywords", profile.search_keywords))
+                for token in _tokens(query):
+                    options = _term_options(token)
+                    if any(_contains_option(title, option) for option in options):
+                        score += 25
+                    if any(_contains_option(role_text, option) for option in options):
+                        score += 20
+                    if any(_contains_option(keyword_text, option) for option in options):
+                        score += 15
                 relevance[profile.pk] = score
         queryset = queryset.filter(pk__in=matches)
 
@@ -132,15 +264,17 @@ def public_profiles(params=None):
         "skill": "skills__slug",
         "availability": "availability",
         "work_preference": "work_preference",
+        "seniority": "seniority_level",
     }
     for parameter, field in filters.items():
         value = str(params.get(parameter, "")).strip()
         if not value:
             continue
-        if parameter in {"availability", "work_preference"}:
+        if parameter in {"availability", "work_preference", "seniority"}:
+            snapshot_key = "seniority_level" if parameter == "seniority" else parameter
             queryset = queryset.filter(
                 (Q(published_snapshot={}) & Q(**{field: value}))
-                | Q(**{f"published_snapshot__{parameter}": value})
+                | Q(**{f"published_snapshot__{snapshot_key}": value})
             )
         else:
             matching_ids = []
@@ -168,10 +302,12 @@ def public_profiles(params=None):
 
     location = _param(params, "location", "cidade", "city")
     if location:
-        queryset = queryset.filter(
-            (Q(published_snapshot={}) & Q(location_is_public=True) & Q(location__icontains=location))
-            | (Q(published_snapshot__location_is_public=True) & Q(published_snapshot__location__icontains=location))
-        )
+        matching_ids = []
+        for profile in queryset:
+            _text, _title, public_location = _profile_search_data(profile)
+            if _normalise(location) in public_location:
+                matching_ids.append(profile.pk)
+        queryset = queryset.filter(pk__in=matching_ids)
 
     country = _param(params, "country", "pais")
     if country:
@@ -206,6 +342,10 @@ def public_profiles(params=None):
         matching_ids = []
         for profile in queryset:
             payload = profile.published_snapshot or {}
+            declared_years = payload.get("years_experience") if payload else profile.years_experience
+            if str(declared_years or "").isdigit() and int(declared_years) >= threshold:
+                matching_ids.append(profile.pk)
+                continue
             records = payload.get("experiences", []) if payload else profile.experiences.all()
             total_days = 0
             for record in records:

@@ -90,6 +90,8 @@ class InteractionModelTests(TestCase):
                 "country",
                 "availability",
                 "work_preference",
+                "seniority",
+                "language",
                 "experience",
                 "cv",
                 "order",

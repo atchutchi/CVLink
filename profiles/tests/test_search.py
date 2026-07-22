@@ -140,6 +140,62 @@ class PublicSearchTests(TestCase):
         response = self.client.get("/pesquisar/", {"q": "coordenacao"})
         self.assertContains(response, profile.public_name)
 
+    def test_search_uses_role_synonyms_without_short_term_false_positives(self):
+        technical = self.public_profile
+        technical.professional_title = "Fullstack Developer e IT Project Manager"
+        technical.target_roles = "Programador, engenheiro de software, gestor de projectos tecnológicos"
+        technical.search_keywords = "software, desenvolvimento web, programação, tecnologia de informação"
+        technical.save()
+        communication = self.create_profile(
+            "comunicacao@example.com",
+            "Ana Comunicação",
+            "Assessora de comunicação institucional",
+            approved=True,
+        )
+        communication.bio = "Comunicação institucional e relações públicas."
+        communication.skills.clear()
+        communication.specializations.clear()
+        communication.save()
+
+        software_response = self.client.get("/pesquisar/", {"q": "software"})
+        ti_response = self.client.get("/pesquisar/", {"q": "ti"})
+
+        self.assertContains(software_response, technical.public_name)
+        self.assertNotContains(software_response, communication.public_name)
+        self.assertContains(ti_response, technical.public_name)
+        self.assertNotContains(ti_response, communication.public_name)
+
+    def test_project_and_projeto_spellings_find_the_same_profile(self):
+        profile = self.public_profile
+        profile.bio = "Gestão de projectos digitais e coordenação de equipas."
+        profile.search_keywords = "gestão de projetos, coordenação de projetos"
+        profile.save()
+
+        old_spelling = self.client.get("/pesquisar/", {"q": "projectos"})
+        current_spelling = self.client.get("/pesquisar/", {"q": "projetos"})
+
+        self.assertContains(old_spelling, profile.public_name)
+        self.assertContains(current_spelling, profile.public_name)
+
+    def test_search_keywords_support_recruiter_function_terms(self):
+        profile = self.public_profile
+        profile.professional_title = "Gestora operacional"
+        profile.target_roles = "Analista de dados, consultora de reporting"
+        profile.search_keywords = "business intelligence, dashboards, Power BI"
+        profile.save()
+
+        response = self.client.get("/pesquisar/", {"q": "business intelligence"})
+
+        self.assertContains(response, profile.public_name)
+
+    def test_location_filter_is_accent_insensitive(self):
+        self.public_profile.location = "São Vicente"
+        self.public_profile.save()
+
+        response = self.client.get("/pesquisar/", {"location": "Sao Vicente"})
+
+        self.assertContains(response, self.public_profile.public_name)
+
     def test_filters_match_the_approved_snapshot_after_pending_changes(self):
         profile = self.public_profile
         profile.published_snapshot = profile.build_public_snapshot()

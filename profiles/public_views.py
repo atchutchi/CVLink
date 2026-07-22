@@ -25,6 +25,7 @@ def search(request):
         "skills": Skill.objects.filter(is_active=True),
         "availability_choices": Profile.Availability.choices,
         "work_preference_choices": Profile.WorkPreference.choices,
+        "seniority_choices": Profile.Seniority.choices,
     }
     # Expor filtros ativos como etiquetas removíveis para que o recrutador
     # perceba rapidamente o contexto da pesquisa e possa ajustar um critério.
@@ -37,7 +38,9 @@ def search(request):
         "location": "Localização",
         "availability": "Disponibilidade",
         "work_preference": "Modalidade",
+        "seniority": "Nível",
         "language": "Idioma",
+        "country": "País",
         "experience": "Experiência mínima",
         "cv": "Currículo disponível",
     }
@@ -48,6 +51,7 @@ def search(request):
         "skill": {item.slug: item.name for item in context["skills"]},
         "availability": dict(Profile.Availability.choices),
         "work_preference": dict(Profile.WorkPreference.choices),
+        "seniority": dict(Profile.Seniority.choices),
         "experience": {
             "1": "1 ano ou mais",
             "3": "3 anos ou mais",
