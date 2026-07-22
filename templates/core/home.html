@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}CVLink | Quadros cabo-verdianos e talento PALOP{% endblock %}
 {% block meta_description %}Pesquisa quadros cabo-verdianos e profissionais PALOP verificados para projectos, consultorias e equipas no continente africano.{% endblock %}
@@ -34,26 +35,18 @@
             </div>
         </div>
 
-        <aside class="hero-network-board" aria-label="Mapa de ligação de talento africano lusófono">
-            <div class="network-map" aria-hidden="true">
-                <span class="map-node node-cv">CV</span>
-                <span class="map-node node-gw">GB</span>
-                <span class="map-node node-ao">AO</span>
-                <span class="map-node node-mz">MZ</span>
-                <span class="map-node node-stp">STP</span>
-                <span class="map-route route-west"></span>
-                <span class="map-route route-south"></span>
-                <span class="map-route route-east"></span>
-                <span class="map-route route-islands"></span>
-                <span class="map-pulse"></span>
+        <aside class="hero-network-board hero-globe-board" aria-label="Globo 3D com Cabo Verde ligado ao continente africano">
+            <div class="globe-canvas-shell">
+                <canvas class="cvlink-globe" data-cvlink-globe width="720" height="520" aria-label="Globo com Cabo Verde, Guiné-Bissau, São Tomé e Príncipe, Angola e Moçambique"></canvas>
+                <div class="globe-hint">move o rato para explorar</div>
             </div>
             <div class="network-copy">
                 <span>Rede CVLink</span>
-                <strong>Cabo Verde ligado ao talento PALOP</strong>
-                <p>Pesquisa profissionais por função, competência, país e disponibilidade. Guarda perfis, compara candidatos e prepara equipas para projectos no continente africano.</p>
+                <strong>Cabo Verde ligado ao continente africano</strong>
+                <p>Um globo interactivo mostra Cabo Verde como origem e rotas reais para países PALOP. As ligações representam pesquisa, shortlist e contacto protegido entre talentos e recrutadores.</p>
             </div>
             <div class="network-stats">
-                <div><strong>CV</strong><span>foco inicial</span></div>
+                <div><strong>CV</strong><span>origem da rede</span></div>
                 <div><strong>PALOP</strong><span>estrutura pronta</span></div>
                 <div><strong>Privado</strong><span>contactos protegidos</span></div>
             </div>
@@ -133,4 +126,9 @@
         {% endfor %}
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/cvlink-globe-land.js' %}" defer></script>
+<script src="{% static 'js/cvlink-globe.js' %}" defer></script>
 {% endblock %}
