@@ -3413,6 +3413,65 @@ body {
     padding: 22px;
 }
 
+.shortlist-card-refined {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.16fr) minmax(240px, 0.34fr) minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 2rem);
+    align-items: start;
+}
+
+.shortlist-management {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+}
+
+.shortlist-management form {
+    margin: 0;
+}
+
+.shortlist-management .compare-select {
+    justify-content: flex-start;
+}
+
+.shortlist-card-refined .shortlist-person {
+    justify-content: flex-start;
+    margin-bottom: 0;
+}
+
+.shortlist-card-refined .profile-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 1rem;
+}
+
+.shortlist-card-refined .shortlist-person h2 {
+    max-width: 20ch;
+    margin: 0;
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+}
+
+.shortlist-card-refined .shortlist-person h2 a {
+    color: var(--brand-ink);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
+
+.shortlist-card-refined .shortlist-person p {
+    max-width: 34ch;
+    margin: 0.35rem 0 0.5rem;
+    color: var(--brand-muted);
+    font-size: 0.96rem;
+    line-height: 1.42;
+}
+
+.shortlist-card-refined .shortlist-edit-form {
+    gap: var(--space-4);
+}
+
 .shortlist-person {
     margin-bottom: 18px;
 }
@@ -4390,6 +4449,174 @@ p,
     box-shadow: none;
 }
 
+.hero-network-board {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: var(--space-5);
+    min-height: 520px;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 18% 24%, rgba(255, 137, 8, 0.28), transparent 30%),
+        radial-gradient(circle at 76% 38%, rgba(54, 113, 188, 0.34), transparent 34%),
+        linear-gradient(145deg, #061c3f 0%, #082653 48%, #0b3f7a 100%);
+    box-shadow: var(--shadow-panel);
+    isolation: isolate;
+}
+
+.hero-network-board::before {
+    content: "";
+    position: absolute;
+    inset: 10%;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 62%);
+    filter: blur(18px);
+    z-index: -1;
+}
+
+.network-map {
+    position: relative;
+    min-height: 260px;
+    border-radius: 14px;
+    background:
+        radial-gradient(circle at 26% 45%, rgba(255, 255, 255, 0.22) 0 1px, transparent 2px),
+        radial-gradient(circle at 58% 35%, rgba(255, 255, 255, 0.16) 0 1px, transparent 2px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    transform: perspective(900px) rotateX(58deg) rotateZ(-9deg);
+    transform-origin: center;
+    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-network-board:hover .network-map {
+    transform: perspective(900px) rotateX(52deg) rotateZ(-5deg) translateY(-6px);
+}
+
+.map-node {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    width: 54px;
+    height: 54px;
+    place-items: center;
+    border: 2px solid rgba(255, 255, 255, 0.78);
+    border-radius: 999px;
+    color: #061c3f;
+    background: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 900;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.node-cv {
+    left: 18%;
+    top: 38%;
+    color: #ffffff;
+    border-color: rgba(255, 137, 8, 0.92);
+    background: #ef7000;
+}
+
+.node-gw { left: 36%; top: 45%; }
+.node-ao { left: 56%; top: 58%; }
+.node-mz { left: 73%; top: 46%; }
+.node-stp { left: 49%; top: 27%; }
+
+.map-route {
+    position: absolute;
+    left: 23%;
+    top: 49%;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 137, 8, 0.95), rgba(255, 255, 255, 0.76));
+    transform-origin: left center;
+    opacity: 0.86;
+}
+
+.route-west { width: 18%; transform: rotate(10deg); }
+.route-south { width: 42%; transform: rotate(26deg); }
+.route-east { width: 58%; transform: rotate(3deg); }
+.route-islands { width: 32%; transform: rotate(-24deg); }
+
+.map-pulse {
+    position: absolute;
+    left: 18%;
+    top: 38%;
+    width: 54px;
+    height: 54px;
+    border: 1px solid rgba(255, 137, 8, 0.78);
+    border-radius: 999px;
+    animation: mapPulse 2.8s ease-out infinite;
+}
+
+.network-copy {
+    max-width: 42ch;
+}
+
+.network-copy span,
+.network-stats span {
+    display: block;
+    color: rgba(255, 255, 255, 0.76);
+}
+
+.network-copy strong {
+    display: block;
+    margin: 0.35rem 0 0.55rem;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+}
+
+.network-copy p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.84);
+}
+
+.network-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.network-stats div {
+    padding: var(--space-4);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.network-stats strong {
+    display: block;
+    font-size: 1.12rem;
+    letter-spacing: -0.02em;
+}
+
+@keyframes mapPulse {
+    0% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(2.6);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .network-map,
+    .hero-network-board:hover .network-map {
+        transition: none;
+        transform: none;
+    }
+
+    .map-pulse {
+        animation: none;
+        opacity: 0.45;
+    }
+}
+
 .section-block {
     padding: clamp(3.5rem, 7vw, 5.5rem) 0;
 }
@@ -4539,6 +4766,14 @@ p,
         margin: 0;
     }
 
+    .hero-network-board {
+        min-height: 0;
+    }
+
+    .network-map {
+        min-height: 230px;
+    }
+
     .hero-person-card-primary,
     .hero-person-card-offset {
         margin: var(--space-3) 0 0;
@@ -4580,6 +4815,17 @@ p,
 
     .profile-name-row h1 {
         font-size: 2.15rem;
+    }
+
+    .shortlist-card-refined {
+        grid-template-columns: 1fr;
+    }
+
+    .shortlist-management {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-self: start;
     }
 }
 
@@ -4658,6 +4904,39 @@ p,
 
     .hero-panel-grid-premium {
         grid-template-columns: 1fr;
+    }
+
+    .network-map {
+        min-height: 190px;
+        transform: none;
+    }
+
+    .hero-network-board:hover .network-map {
+        transform: translateY(-3px);
+    }
+
+    .map-node {
+        width: 44px;
+        height: 44px;
+        font-size: 0.72rem;
+    }
+
+    .node-cv { left: 12%; top: 40%; }
+    .node-gw { left: 33%; top: 46%; }
+    .node-ao { left: 54%; top: 60%; }
+    .node-mz { left: 75%; top: 46%; }
+    .node-stp { left: 47%; top: 25%; }
+
+    .network-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .shortlist-card-refined .shortlist-person {
+        align-items: flex-start;
+    }
+
+    .shortlist-card-refined .shortlist-person h2 {
+        max-width: none;
     }
 
     .trust-grid {

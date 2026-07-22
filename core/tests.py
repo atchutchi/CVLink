@@ -22,6 +22,9 @@ class HomeViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Iniciar sess")
         self.assertNotContains(response, "Criar perfil")
+        self.assertContains(response, ">Perfil<")
+        nav_html = response.content.decode().split('<div class="nav-discovery">', 1)[1].split("</div>", 1)[0]
+        self.assertNotIn("Como funciona", nav_html)
 
     def test_login_page_does_not_render_global_header(self):
         response = self.client.get(reverse("accounts:login"))
@@ -79,6 +82,7 @@ class SeoAndOperationsTests(TestCase):
         self.assertContains(response, "África lusófona")
         self.assertContains(response, 'name="q"')
         self.assertContains(response, "cvlink-logo.png")
+        self.assertContains(response, "hero-network-board")
         self.assertNotContains(response, "/conta/criar/")
         self.assertNotContains(response, "/conta/entrar/")
         self.assertNotContains(response, "Europa")

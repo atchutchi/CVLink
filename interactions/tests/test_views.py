@@ -470,6 +470,7 @@ class InteractionViewTests(TestCase):
         self.assertNotContains(response, "Nota privada")
 
     def test_favorites_page_shows_recruiter_shortlist_workspace(self):
+        Favorite.objects.create(user=self.user, profile=self.profile)
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("interactions:favorites"))
@@ -478,6 +479,7 @@ class InteractionViewTests(TestCase):
         self.assertContains(response, "Estado do processo")
         self.assertContains(response, "Exportar CSV")
         self.assertContains(response, "Comparar seleccionados")
+        self.assertContains(response, "shortlist-card-refined")
 
     def test_favorites_page_includes_public_profile_with_changes_pending(self):
         self.profile.status = Profile.Status.CHANGES_PENDING

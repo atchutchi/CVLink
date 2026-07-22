@@ -23,8 +23,11 @@
         <form id="compare-form" method="get" action="{% url 'interactions:compare' %}"></form>
         <div class="shortlist-list">
             {% for item in favorites %}
-                <article class="shortlist-item shortlist-item-pro">
-                    <label class="compare-select"><input form="compare-form" type="checkbox" name="profiles" value="{{ item.profile.pk }}"> Comparar</label>
+                <article class="shortlist-item shortlist-item-pro shortlist-card-refined">
+                    <div class="shortlist-management">
+                        <label class="compare-select"><input form="compare-form" type="checkbox" name="profiles" value="{{ item.profile.pk }}"> Comparar</label>
+                        <form method="post" action="{% url 'interactions:favorite-toggle' item.profile.slug %}">{% csrf_token %}<button class="btn btn-outline-brand" type="submit">Remover</button></form>
+                    </div>
                     <div class="shortlist-person">
                         <div class="profile-avatar" aria-hidden="true">{{ item.profile.public_display_name|slice:":1"|upper }}</div>
                         <div>
@@ -44,7 +47,6 @@
                             <a class="btn btn-outline-brand" href="{% url 'public-profile' item.profile.slug %}">Ver perfil</a>
                         </div>
                     </form>
-                    <form method="post" action="{% url 'interactions:favorite-toggle' item.profile.slug %}">{% csrf_token %}<button class="btn btn-outline-brand" type="submit">Remover</button></form>
                 </article>
             {% empty %}
                 <div class="empty-state"><h2>A shortlist está vazia</h2><p>Guarda perfis durante a pesquisa para os acompanhar aqui.</p><a class="btn btn-brand" href="{% url 'search' %}">Pesquisar profissionais</a></div>
